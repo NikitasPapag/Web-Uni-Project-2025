@@ -1,0 +1,15 @@
+<div class="student centered">
+  <h1>Welcome, <span id="usernameDisplay"></span>!</h1>
+  <p>This is the dashboard for User Type Student.</p>
+</div>
+<script>
+  const username = localStorage.getItem('username');
+  const nameSpan = document.getElementById('usernameDisplay');
+
+  if (username && nameSpan) {
+    nameSpan.textContent = username.charAt(0).toUpperCase() + username.slice(1);
+  } else {
+    // Optional: redirect or reload main view if loaded out of context
+    document.getElementById('main-content').innerHTML = '<p>Unauthorized. Please log in.</p>';
+  }
+</script>

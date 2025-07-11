@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web Project</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Header loads here -->
+  <div id="header-container"></div>
+
+  <!-- Main content area -->
+  <div id="main-content"></div>
+
+  <script>
+    const users = {
+      "alice": "student",
+      "bob": "professor",
+      "carol": "secretariat"
+    };
+
+    // Load header
+    fetch('header.html')
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('header-container').innerHTML = html;
+        setupHeaderEvents();
+        loadInitialView();
+      });
+
+    function setupHeaderEvents() {
+      document.addEventListener('click', (e) => {
+        if (e.target.id === 'home-btn' || e.target.id === 'logo-link') {
+          loadInitialView();
+        }
+
+        if (e.target.id === 'login-btn') {
+          loadLoginForm();
+        }
+
+        if (e.target.id === 'logout-btn') {
+          localStorage.removeItem('username');
+          loadInitialView();
+        }
+
+        if (e.target.id === 'account-btn') {
+          e.preventDefault();
+          const username = localStorage.getItem('username');
+          if (username && users[username] === 'student') {
+            loadStudentAccount(username);
+          }
+        }
+      });
+    }
+
+    function updateHeaderButtons() {
+      const username = localStorage.getItem('username');
+      const userType = users[username];
+
+      const loginBtn = document.getElementById('login-btn');
+      const accountBtn = document.getElementById('account-btn');
+      const logoutBtn = document.getElementById('logout-btn');
+
+      if (username) {
+        loginBtn.style.display = 'none';
+        logoutBtn.style.display = 'inline-block';
+
+        if (userType === 'student') {
+          accountBtn.style.display = 'inline-block';
+        } else {
+          accountBtn.style.display = 'none';
+        }
+      } else {
+        loginBtn.style.display = 'inline-block';
+        accountBtn.style.display = 'none';
+        logoutBtn.style.display = 'none';
+      }
+    }
+
+    function loadInitialView() {
+  document.getElementById('main-content').innerHTML = `
+    <div class="welcome-message centered">
+      <h1>Καλωσήρθατε στην Πλατφόρμα</h1>
+      <p>Χρησιμοποιήστε την πλοήγηση επάνω για να συνδεθείτε ή να περιηγηθείτε.</p>
+    </div>
+  `;
+  updateHeaderButtons();
+}
+
+    function loadLoginForm() {
+      document.getElementById('main-content').innerHTML = `
+        <form id="loginForm" class="login-form">
+          <input type="text" id="username" placeholder="Enter your username" required />
+          <button type="submit">Login</button>
+          <p id="errorMsg" class="error-msg"></p>
+        </form>
+      `;
+
+      updateHeaderButtons();
+
+      document.getElementById('loginForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim().toLowerCase();
+        const errorMsg = document.getElementById('errorMsg');
+
+        if (users[username]) {
+          const userType = users[username];
+          localStorage.setItem('username', username);
+          await loadUserPage(userType, username);
+        } else {
+          errorMsg.textContent = "Unrecognized username.";
+        }
+      });
+    }
+
+    async function loadUserPage(userType, username) {
+      try {
+        const response = await fetch(`${userType}.html`);
+        const html = await response.text();
+        document.getElementById('main-content').innerHTML = html;
+
+        const span = document.getElementById('usernameDisplay');
+        if (span) {
+          span.textContent = username.charAt(0).toUpperCase() + username.slice(1);
+        }
+
+        updateHeaderButtons();
+      } catch {
+        document.getElementById('main-content').innerHTML = `<p>Error loading ${userType} page.</p>`;
+      }
+    }
+
+    async function loadStudentAccount(username) {
+      try {
+        const response = await fetch('student_account.html');
+        if (!response.ok) throw new Error('Page not found');
+
+        const html = await response.text();
+        document.getElementById('main-content').innerHTML = html;
+
+        const span = document.getElementById('usernameDisplay');
+        if (span) {
+          span.textContent = username.charAt(0).toUpperCase() + username.slice(1);
+        }
+
+        updateHeaderButtons();
+      } catch {
+        document.getElementById('main-content').innerHTML = `<p>Error loading account page.</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
