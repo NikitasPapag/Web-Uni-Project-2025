@@ -7,48 +7,45 @@
 </head>
 <body>
 
-  <!-- Header loads here -->
   <div id="header-container"></div>
 
-  <!-- Main content area -->
   <div id="main-content"></div>
 
   <script>
-    const users = {
-      "alice": "student",
-      "bob": "professor",
-      "carol": "secretariat"
+    const xristes = {
+      "alice": "foititis",
+      "bob": "didaskon",
+      "carol": "grammateia"
     };
 
-    // Load header
     fetch('header.html')
       .then(res => res.text())
       .then(html => {
         document.getElementById('header-container').innerHTML = html;
         setupHeaderEvents();
-        loadInitialView();
+        loadArxiki();
       });
 
     function setupHeaderEvents() {
       document.addEventListener('click', (e) => {
-        if (e.target.id === 'home-btn' || e.target.id === 'logo-link') {
-          loadInitialView();
+        if (e.target.id === 'arxiki-btn') {
+          loadArxiki();
         }
 
-        if (e.target.id === 'login-btn') {
+        if (e.target.id === 'eisodos-btn') {
           loadLoginForm();
         }
 
-        if (e.target.id === 'logout-btn') {
+        if (e.target.id === 'aposyndesi-btn') {
           localStorage.removeItem('username');
-          loadInitialView();
+          loadArxiki();
         }
 
-        if (e.target.id === 'account-btn') {
+        if (e.target.id === 'logariasmos-btn') {
           e.preventDefault();
           const username = localStorage.getItem('username');
-          if (username && users[username] === 'student') {
-            loadStudentAccount(username);
+          if (username && xristes[username] === 'foititis') {
+            loadLogariasmosFoititi(username);
           }
         }
       });
@@ -56,33 +53,33 @@
 
     function updateHeaderButtons() {
       const username = localStorage.getItem('username');
-      const userType = users[username];
+      const typosXristi = xristes[username];
 
-      const loginBtn = document.getElementById('login-btn');
-      const accountBtn = document.getElementById('account-btn');
-      const logoutBtn = document.getElementById('logout-btn');
+      const eisodosBtn = document.getElementById('eisodos-btn');
+      const logariasmosBtn = document.getElementById('logariasmos-btn');
+      const aposyndesiBtn = document.getElementById('aposyndesi-btn');
 
       if (username) {
-        loginBtn.style.display = 'none';
-        logoutBtn.style.display = 'inline-block';
+        eisodosBtn.style.display = 'none';
+        aposyndesiBtn.style.display = 'inline-block';
 
-        if (userType === 'student') {
-          accountBtn.style.display = 'inline-block';
+        if (typosXristi === 'foititis') {
+          logariasmosBtn.style.display = 'inline-block';
         } else {
-          accountBtn.style.display = 'none';
+          logariasmosBtn.style.display = 'none';
         }
       } else {
-        loginBtn.style.display = 'inline-block';
-        accountBtn.style.display = 'none';
-        logoutBtn.style.display = 'none';
+        eisodosBtn.style.display = 'inline-block';
+        logariasmosBtn.style.display = 'none';
+        aposyndesiBtn.style.display = 'none';
       }
     }
 
-    function loadInitialView() {
+    function loadArxiki() {
   document.getElementById('main-content').innerHTML = `
     <div class="welcome-message centered">
       <h1>Καλωσήρθατε στην Πλατφόρμα</h1>
-      <p>Χρησιμοποιήστε την πλοήγηση επάνω για να συνδεθείτε ή να περιηγηθείτε.</p>
+      <p>Χρησιμοποιήστε την πλοήγηση στο επάνω μέρος για να συνδεθείτε ή να περιηγηθείτε.</p>
     </div>
   `;
   updateHeaderButtons();
@@ -91,7 +88,7 @@
     function loadLoginForm() {
       document.getElementById('main-content').innerHTML = `
         <form id="loginForm" class="login-form">
-          <input type="text" id="username" placeholder="Enter your username" required />
+          <input type="text" id="username" placeholder="Εισάγετε το username σας." required />
           <button type="submit">Login</button>
           <p id="errorMsg" class="error-msg"></p>
         </form>
@@ -104,19 +101,19 @@
         const username = document.getElementById('username').value.trim().toLowerCase();
         const errorMsg = document.getElementById('errorMsg');
 
-        if (users[username]) {
-          const userType = users[username];
+        if (xristes[username]) {
+          const typosXristi = xristes[username];
           localStorage.setItem('username', username);
-          await loadUserPage(userType, username);
+          await loadSelidaXristi(typosXristi, username);
         } else {
-          errorMsg.textContent = "Unrecognized username.";
+          errorMsg.textContent = "Το username είναι λάθος.";
         }
       });
     }
 
-    async function loadUserPage(userType, username) {
+    async function loadSelidaXristi(typosXristi, username) {
       try {
-        const response = await fetch(`${userType}.html`);
+        const response = await fetch(`${typosXristi}.html`);
         const html = await response.text();
         document.getElementById('main-content').innerHTML = html;
 
@@ -127,14 +124,14 @@
 
         updateHeaderButtons();
       } catch {
-        document.getElementById('main-content').innerHTML = `<p>Error loading ${userType} page.</p>`;
+        document.getElementById('main-content').innerHTML = `<p>Error loading ${typosXristi} page.</p>`;
       }
     }
 
-    async function loadStudentAccount(username) {
+    async function loadLogariasmosFoititi(username) {
       try {
-        const response = await fetch('student_account.html');
-        if (!response.ok) throw new Error('Page not found');
+        const response = await fetch('logariasmos_foititi.html');
+        if (!response.ok) throw new Error('Η σελίδα δεν υπάρχει.');
 
         const html = await response.text();
         document.getElementById('main-content').innerHTML = html;
@@ -146,7 +143,7 @@
 
         updateHeaderButtons();
       } catch {
-        document.getElementById('main-content').innerHTML = `<p>Error loading account page.</p>`;
+        document.getElementById('main-content').innerHTML = `<p>Σφάλμα κατά την φόρτωση της σελίδας χρήστη.</p>`;
       }
     }
   </script>
