@@ -38,7 +38,7 @@ body {
 
 .nav-right {
   display: flex;
-  gap: 10px;
+  gap: 4px;
   flex-wrap: wrap;
   justify-content: flex-end;
   align-items: center;
@@ -114,7 +114,41 @@ body {
   color: #333;
 }
 
-.student-account {
+.dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: white;
+  min-width: 180px;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  border-radius: 4px;
+  z-index: 999;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+  }
+
+.dropdown-content a {
+  padding: 10px 16px;
+  display: block;
+  text-decoration: none;
+  color: black;
+}
+
+.dropdown-content a:hover {
+    background-color: #f1f1f1;
+  }
+
+.logariasmos-foititi {
   background-color: white;
   padding: 50px 40px;
   border-radius: 10px;
@@ -125,14 +159,14 @@ body {
   text-align: center;
 }
 
-.student-account h1 {
+.logariasmos-foititi h1 {
   font-size: 32px;
   color: #111;
   font-weight: 700;
   margin-bottom: 20px;
 }
 
-.student-account p {
+.logariasmos-foititi p {
   font-size: 18px;
   color: #333;
 }
