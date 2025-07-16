@@ -48,32 +48,53 @@
             loadLogariasmosFoititi(username);
           }
         }
+        if (e.target.id === 'user-button') {
+          const username = localStorage.getItem('username');
+          if (username) {
+            const typosXristi = xristes[username];
+            loadSelidaXristi(typosXristi, username);
+          }
+        }
+
+        if (e.target.id === 'logariasmos-dropdown') {
+          e.preventDefault();
+          const username = localStorage.getItem('username');
+          if (username && xristes[username] === 'foititis') {
+            loadLogariasmosFoititi(username);
+          }
+        }
       });
     }
 
     function updateHeaderButtons() {
-      const username = localStorage.getItem('username');
-      const typosXristi = xristes[username];
+  const username = localStorage.getItem('username');
+  const typosXristi = xristes[username];
 
-      const eisodosBtn = document.getElementById('eisodos-btn');
-      const logariasmosBtn = document.getElementById('logariasmos-btn');
-      const aposyndesiBtn = document.getElementById('aposyndesi-btn');
+  const eisodosBtn = document.getElementById('eisodos-btn');
+  const aposyndesiBtn = document.getElementById('aposyndesi-btn');
+  const userMenu = document.getElementById('user-dropdown-container');
+  const userBtn = document.getElementById('user-button');
+  const logariasmosLink = document.getElementById('logariasmos-dropdown');
 
-      if (username) {
-        eisodosBtn.style.display = 'none';
-        aposyndesiBtn.style.display = 'inline-block';
+  if (username) {
+    eisodosBtn.style.display = 'none';
+    aposyndesiBtn.style.display = 'inline-block';
+    userMenu.style.display = 'inline-block';
 
-        if (typosXristi === 'foititis') {
-          logariasmosBtn.style.display = 'inline-block';
-        } else {
-          logariasmosBtn.style.display = 'none';
-        }
-      } else {
-        eisodosBtn.style.display = 'inline-block';
-        logariasmosBtn.style.display = 'none';
-        aposyndesiBtn.style.display = 'none';
-      }
+    // Set button label to capitalized username
+    userBtn.textContent = username.charAt(0).toUpperCase() + username.slice(1);
+
+    if (typosXristi === 'foititis') {
+      logariasmosLink.style.display = 'block';
+    } else {
+      logariasmosLink.style.display = 'none';
     }
+  } else {
+    eisodosBtn.style.display = 'inline-block';
+    aposyndesiBtn.style.display = 'none';
+    userMenu.style.display = 'none';
+  }
+}
 
     function loadArxiki() {
   document.getElementById('main-content').innerHTML = `
