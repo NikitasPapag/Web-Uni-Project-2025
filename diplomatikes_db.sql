@@ -87,7 +87,7 @@ CREATE TABLE anakoinoseis (
 
 /* pinakas foititwn ,epektash toy pinaka xristes */
 CREATE TABLE foititis (
-    id INT PRIMARY KEY,  / to id apton pinaka xristes /
+    id INT PRIMARY KEY,  /* to id apton pinaka xristes */
     AM VARCHAR(20) UNIQUE NOT NULL, 
     tilefono_kinhto VARCHAR(20), 
     tilefono_stathero VARCHAR(20), 
@@ -95,7 +95,7 @@ CREATE TABLE foititis (
     dieythinsi_arithmos VARCHAR(10),
     dieythinsi_polh VARCHAR(50), 
     dieythinsi_tk VARCHAR(10), 
-    FOREIGN KEY (id) REFERENCES xristes(id) ON DELETE CASCADE / otan diagrafei xristis diagrafonte kai ta stoixeia toy foititi /
+    FOREIGN KEY (id) REFERENCES xristes(id) ON DELETE CASCADE /* otan diagrafei xristis diagrafonte kai ta stoixeia toy foititi */
 );
 
 /* pinakas gia didaskontes epektash toy pinaka xrhstes */
