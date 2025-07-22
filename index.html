@@ -12,17 +12,13 @@
   <div id="main-content"></div>
 
   <script>
-    const xristes = {
-      "alice": "foititis",
-      "bob": "didaskon",
-      "carol": "grammateia"
-    };
 
     fetch('header.html')
       .then(res => res.text())
       .then(html => {
         document.getElementById('header-container').innerHTML = html;
         setupHeaderEvents();
+        updateHeaderButtons(); 
         loadArxiki();
       });
 
@@ -44,22 +40,24 @@
         if (e.target.id === 'logariasmos-btn') {
           e.preventDefault();
           const username = localStorage.getItem('username');
-          if (username && xristes[username] === 'foititis') {
+          const rolos = localStorage.getItem('rolos'); 
+          if (username && rolos === 'foititis') {
             loadLogariasmosFoititi(username);
           }
         }
         if (e.target.id === 'user-button') {
           const username = localStorage.getItem('username');
+          const rolos = localStorage.getItem('rolos'); 
           if (username) {
-            const typosXristi = xristes[username];
-            loadSelidaXristi(typosXristi, username);
+            loadSelidaXristi(rolos, username);
           }
         }
 
         if (e.target.id === 'logariasmos-dropdown') {
           e.preventDefault();
           const username = localStorage.getItem('username');
-          if (username && xristes[username] === 'foititis') {
+          const rolos = localStorage.getItem('rolos'); 
+          if (username && rolos === 'foititis') {
             loadLogariasmosFoititi(username);
           }
         }
@@ -67,14 +65,14 @@
     }
 
     function updateHeaderButtons() {
-  const username = localStorage.getItem('username');
-  const typosXristi = xristes[username];
+      const username = localStorage.getItem('username');
+      const rolos = localStorage.getItem('rolos');
 
-  const eisodosBtn = document.getElementById('eisodos-btn');
-  const aposyndesiBtn = document.getElementById('aposyndesi-btn');
-  const userMenu = document.getElementById('user-dropdown-container');
-  const userBtn = document.getElementById('user-button');
-  const logariasmosLink = document.getElementById('logariasmos-dropdown');
+      const eisodosBtn = document.getElementById('eisodos-btn');
+      const aposyndesiBtn = document.getElementById('aposyndesi-btn');
+      const userMenu = document.getElementById('user-dropdown-container');
+      const userBtn = document.getElementById('user-button');
+      const logariasmosLink = document.getElementById('logariasmos-dropdown');
 
   if (username) {
     eisodosBtn.style.display = 'none';
@@ -84,7 +82,7 @@
     // Set button label to capitalized username
     userBtn.textContent = username.charAt(0).toUpperCase() + username.slice(1);
 
-    if (typosXristi === 'foititis') {
+    if (rolos === 'foititis') {
       logariasmosLink.style.display = 'block';
     } else {
       logariasmosLink.style.display = 'none';
@@ -122,19 +120,32 @@
         const username = document.getElementById('username').value.trim().toLowerCase();
         const errorMsg = document.getElementById('errorMsg');
 
-        if (xristes[username]) {
-          const typosXristi = xristes[username];
-          localStorage.setItem('username', username);
-          await loadSelidaXristi(typosXristi, username);
-        } else {
-          errorMsg.textContent = "Το username είναι λάθος.";
+        try {
+        const response = await fetch('http://localhost:3000/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          errorMsg.textContent = data.error || 'Σφάλμα.';
+          return;
         }
-      });
+
+        localStorage.setItem('username', data.username);
+        localStorage.setItem('rolos', data.rolos);
+        await loadSelidaXristi(data.rolos, data.username);
+      } catch {
+        errorMsg.textContent = 'Αποτυχία σύνδεσης.';
+      }
+     });
     }
 
-    async function loadSelidaXristi(typosXristi, username) {
+    async function loadSelidaXristi(rolos, username) {
       try {
-        const response = await fetch(`${typosXristi}.html`);
+        const response = await fetch(`${rolos}.html`);
         const html = await response.text();
         document.getElementById('main-content').innerHTML = html;
 
@@ -145,7 +156,7 @@
 
         updateHeaderButtons();
       } catch {
-        document.getElementById('main-content').innerHTML = `<p>Error loading ${typosXristi} page.</p>`;
+        document.getElementById('main-content').innerHTML = `<p>Error loading ${rolos} page.</p>`;
       }
     }
 
