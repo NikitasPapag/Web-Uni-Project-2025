@@ -1,15 +1,484 @@
-<div class="foititis centered">
-  <h1>Καλωσήρθατε, <span id="usernameDisplay"></span>!</h1>
-  <p>This is the dashboard for User Type Student.</p>
-</div>
-<script>
-  const username = localStorage.getItem('username');
-  const nameSpan = document.getElementById('usernameDisplay');
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Πίνακας Φοιτητή</title>
+  <style>
+    /* mikra stylakia gia anagnwsimotita */
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background:#f7f7f9; color:#222; }
+    header { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; background:#fff; border-bottom:1px solid #eaeaea; position:sticky; top:0; }
+    main { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+    .actions button { padding:10px 14px; border:1px solid #ddd; background:#fff; border-radius:10px; cursor:pointer; }
+    .card { background:#fff; border:1px solid #eee; border-radius:12px; padding:16px; margin: 14px 0; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:12px; }
+    h1,h2,h3 { margin: 8px 0 10px; }
+    label { display:block; margin: 8px 0 4px; }
+    input, select, textarea { width:100%; padding:8px; border:1px solid #ddd; border-radius:8px; }
+    .muted { color:#666; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; }
+    .row > * { flex:1; min-width: 220px; }
+    .pill { display:inline-block; padding:4px 8px; border-radius:999px; border:1px solid #ddd; background:#fafafa; margin-right:6px; }
+    .sep { height:1px; background:#eee; margin:16px 0; }
+    .error { color:#b00020; }
+    .ok { color:#0b7a0b; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Καλώς ήρθατε! <span id="helloUser"></span></h1>
+    <button id="logoutBtn">Αποσύνδεση</button>
+  </header>
 
-  if (username && nameSpan) {
-    nameSpan.textContent = username.charAt(0).toUpperCase() + username.slice(1);
-  } else {
-    // Optional: redirect or reload main view if loaded out of context
-    document.getElementById('main-content').innerHTML = '<p>Unauthorized. Please log in.</p>';
-  }
-</script>
+  <main>
+    <div class="actions">
+      <button id="btnListThemata">Προβολή Διαθέσιμων Θεμάτων</button>
+      <button id="btnMyDiplomatiki">Προβολή Θέματος</button>
+      <button id="btnEditProfile">Επεξεργασία Προφίλ</button>
+      <button id="btnManageDiplomatiki">Διαχείριση Διπλωματικής</button>
+    </div>
+
+    <div id="content"></div>
+  </main>
+
+  <script>
+    // Pairnei id foititi & onoma xristi apo localStorage
+    const userId = localStorage.getItem('user_id');
+    const username = localStorage.getItem('username');
+    const rolos = localStorage.getItem('rolos');
+    const API_BASE = 'http://localhost:3000/api';
+
+    const helloUserEl = document.getElementById('helloUser');
+    helloUserEl.textContent = username ? username : 'Φοιτητή';
+    const content = document.getElementById('content');
+
+    // Aplo guard an den yparxei session
+    if (!userId || rolos !== 'foititis') {
+      content.innerHTML = `
+        <div class="card error">
+          Δεν είστε συνδεδεμένος/η ως Φοιτητής. Παρακαλώ κάντε είσοδο.
+        </div>`;
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.clear();
+      window.location.href = '/login.html';
+    });
+
+    // Ypologizei meres apo imerominia (YYYY-MM-DD)
+    function daysSince(dateStr) {
+      if (!dateStr) return null;
+      const today = new Date();
+      const d = new Date(dateStr);
+      const diff = Math.floor((today - d) / (1000*60*60*24));
+      return diff;
+    }
+
+    // Kanei fetch me aplo error handling
+    async function apiFetch(url, options = {}) {
+      const res = await fetch(url, options);
+      let data = null;
+      try { data = await res.json(); } catch {}
+      if (!res.ok) {
+        const msg = data && data.error ? data.error : 'Σφάλμα αιτήματος.';
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    // Provoli diathesimwn thematwn
+    async function showThemataList() {
+      content.innerHTML = `<div class="card">Φόρτωση θεμάτων...</div>`;
+      try {
+        const themata = await apiFetch(`${API_BASE}/themata`); // id, titlos, perigrafi
+        if (!themata.length) {
+          content.innerHTML = `<div class="card">Δεν υπάρχουν διαθέσιμα θέματα αυτή τη στιγμή.</div>`;
+          return;
+        }
+
+        let html = `<div class="card">
+          <h2>Διαθέσιμα Θέματα Διπλωματικών</h2>
+          <div class="grid">`;
+        for (const t of themata) {
+          html += `
+            <div class="card">
+              <h3>${t.titlos}</h3>
+              <p class="muted">${t.perigrafi || ''}</p>
+              <div class="row">
+                <button data-id="${t.id}" class="btnViewThema">Προβολή Λεπτομερειών</button>
+                <button data-id="${t.id}" class="btnAskAssign">Αίτηση Ανάθεσης</button>
+              </div>
+            </div>`;
+        }
+        html += `</div></div>`;
+        content.innerHTML = html;
+
+        // Koumpia provolis / anathesis
+        content.querySelectorAll('.btnViewThema').forEach(btn => {
+          btn.addEventListener('click', () => viewSingleThema(btn.dataset.id));
+        });
+        content.querySelectorAll('.btnAskAssign').forEach(btn => {
+          btn.addEventListener('click', () => askAssign(btn.dataset.id));
+        });
+
+      } catch (err) {
+        content.innerHTML = `<div class="card error">${err.message}</div>`;
+      }
+    }
+
+    // Provoli monadikou thematos
+    async function viewSingleThema(id) {
+      try {
+        const t = await apiFetch(`${API_BASE}/themata/${id}`);
+        content.innerHTML = `
+          <div class="card">
+            <h2>Λεπτομέρειες Θέματος</h2>
+            <h3>${t.titlos}</h3>
+            <p>${t.perigrafi || ''}</p>
+            ${t.arxeio ? `<p><a href="/uploads/${t.arxeio}" target="_blank">Συνημμένο αρχείο περιγραφής</a></p>` : `<p class="muted">Δεν υπάρχει συνημμένο αρχείο περιγραφής.</p>`}
+            <div class="sep"></div>
+            <button onclick="askAssign(${t.id})">Αίτηση Ανάθεσης</button>
+            <button onclick="showThemataList()">Επιστροφή στη λίστα</button>
+          </div>`;
+      } catch (err) {
+        content.innerHTML = `<div class="card error">${err.message}</div>`;
+      }
+    }
+
+    // Aitisi anathesis gia to epilegmeno thema
+    async function askAssign(id_thematos) {
+      if (!userId) return alert('Δεν είστε συνδεδεμένος/η.');
+      if (!confirm('Επιβεβαίωση αίτησης ανάθεσης για το θέμα;')) return;
+      try {
+        await apiFetch(`${API_BASE}/diplomatikes/anathesi`, {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({ id_thematos, id_foititi: userId })
+        });
+        alert('Η αίτηση ανάθεσης υποβλήθηκε.');
+        showMyDiplomatiki();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // Provoli trexoysas D.E
+    async function showMyDiplomatiki() {
+      if (!userId) {
+        content.innerHTML = `<div class="card error">Δεν βρέθηκε συνεδρία χρήστη.</div>`;
+        return;
+      }
+      content.innerHTML = `<div class="card">Φόρτωση στοιχείων διπλωματικής...</div>`;
+      try {
+        const d = await apiFetch(`${API_BASE}/diplomatiki/byFoititis/${userId}`);
+        const days = daysSince(d.hmerominia_anathesis);
+        content.innerHTML = `
+          <div class="card">
+            <h2>Προβολή Θέματος</h2>
+            <h3>${d.titlos}</h3>
+            <p>${d.perigrafi || ''}</p>
+            ${d.perigrafi_arxeio ? `<p><a href="/uploads/${d.perigrafi_arxeio}" target="_blank">Συνημμένο αρχείο περιγραφής</a></p>` : `<p class="muted">Δεν υπάρχει συνημμένο αρχείο περιγραφής.</p>`}
+            <p><strong>Κατάσταση:</strong> <span class="pill">${d.katastasi}</span></p>
+            <p><strong>Ημερομηνία Ανάθεσης:</strong> ${d.hmerominia_anathesis || '—'} ${days!=null ? `(<span class="muted">${days} ημέρες πριν</span>)` : ''}</p>
+            <p><strong>Τριμελής Επιτροπή:</strong> ${d.melh_trimelous || '—'}</p>
+          </div>`;
+      } catch (err) {
+        content.innerHTML = `<div class="card error">${err.message}</div>`;
+      }
+    }
+
+    // Epeksergasia profil
+    async function showEditProfile() {
+      if (!userId) return content.innerHTML = `<div class="card error">Δεν βρέθηκε συνεδρία χρήστη.</div>`;
+      content.innerHTML = `<div class="card">Φόρτωση προφίλ...</div>`;
+      try {
+        const p = await apiFetch(`${API_BASE}/profil/${userId}`);
+        content.innerHTML = `
+          <div class="card">
+            <h2>Επεξεργασία Προφίλ</h2>
+            <div class="row">
+              <div><label>Όνομα</label><input id="pf_onoma" value="${p.onoma || ''}" /></div>
+              <div><label>Επώνυμο</label><input id="pf_epitheto" value="${p.epitheto || ''}" /></div>
+            </div>
+            <div class="row">
+              <div><label>Email Επικοινωνίας</label><input id="pf_email" value="${p.email || ''}" /></div>
+              <div><label>Κινητό</label><input id="pf_kinhto" value="${p.tilefono_kinhto || ''}" /></div>
+            </div>
+            <div class="row">
+              <div><label>Σταθερό</label><input id="pf_stathero" value="${p.tilefono_stathero || ''}" /></div>
+              <div><label>Α.Μ.</label><input id="pf_am" value="${p.AM || ''}" /></div>
+            </div>
+            <div class="row">
+              <div><label>Οδός</label><input id="pf_odo" value="${p.dieythinsi_odo || ''}" /></div>
+              <div><label>Αριθμός</label><input id="pf_ar" value="${p.dieythinsi_arithmos || ''}" /></div>
+              <div><label>Πόλη</label><input id="pf_poli" value="${p.dieythinsi_polh || ''}" /></div>
+              <div><label>Τ.Κ.</label><input id="pf_tk" value="${p.dieythinsi_tk || ''}" /></div>
+            </div>
+            <div class="sep"></div>
+            <button id="btnSaveProfile">Αποθήκευση Αλλαγών</button>
+          </div>`;
+
+        document.getElementById('btnSaveProfile').addEventListener('click', async () => {
+          try {
+            await apiFetch(`${API_BASE}/profil/${userId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type':'application/json' },
+              body: JSON.stringify({
+                onoma: document.getElementById('pf_onoma').value,
+                epitheto: document.getElementById('pf_epitheto').value,
+                email: document.getElementById('pf_email').value,
+                tilefono_kinhto: document.getElementById('pf_kinhto').value,
+                tilefono_stathero: document.getElementById('pf_stathero').value,
+                AM: document.getElementById('pf_am').value,
+                dieythinsi_odo: document.getElementById('pf_odo').value,
+                dieythinsi_arithmos: document.getElementById('pf_ar').value,
+                dieythinsi_polh: document.getElementById('pf_poli').value,
+                dieythinsi_tk: document.getElementById('pf_tk').value
+              })
+            });
+            alert('Το προφίλ ενημερώθηκε.');
+            const newName = document.getElementById('pf_onoma').value;
+            localStorage.setItem('username', newName);
+            helloUserEl.textContent = newName ? newName : 'Φοιτητή';
+          } catch (err) {
+            alert(err.message);
+          }
+        });
+
+      } catch (err) {
+        content.innerHTML = `<div class="card error">${err.message}</div>`;
+      }
+    }
+
+    // DIaxeirisi diplwmatikis
+    async function showManageDiplomatiki() {
+      if (!userId) return content.innerHTML = `<div class="card error">Δεν βρέθηκε συνεδρία χρήστη.</div>`;
+      content.innerHTML = `<div class="card">Φόρτωση...</div>`;
+      try {
+        const d = await apiFetch(`${API_BASE}/diplomatiki/byFoititis/${userId}`);
+        if (!d) {
+          return content.innerHTML = `<div class="card error">Δεν έχετε αναλάβει ακόμη διπλωματική εργασία.</div>`;
+        }
+        
+        if (d.katastasi === 'ypo_anathesi') {
+          // periptwsh-ypo anathesi
+          const proskliseis = await apiFetch(`${API_BASE}/trimelis/proskliseis/${d.id}`);
+          content.innerHTML = `
+            <div class="card">
+              <h2>Διαχείριση Διπλωματικής — Υπό Ανάθεση</h2>
+              <p class="muted">Μπορείτε να προσκαλέσετε διδάσκοντες για την τριμελή επιτροπή (έως 2 να αποδεχθούν).</p>
+              <p><strong>Τρέχοντες Συμμετέχοντες:</strong> ${d.melh_trimelous || '—'}</p>
+              <div class="sep"></div>
+              <div class="row">
+                <div>
+                  <label>Κωδικός Διδάσκοντα</label>
+                  <input id="inviteDidaskonId" placeholder="π.χ. 12" />
+                </div>
+              </div>
+              <button id="btnInvite">Αποστολή Πρόσκλησης</button>
+              <div class="sep"></div>
+              <h3>Προσκλήσεις</h3>
+              ${proskliseis.length ? `
+                <div>
+                  ${proskliseis.map(p => `
+                    <div class="card">
+                      <div><strong>Διδάσκων:</strong> ${p.onoma} ${p.epitheto}</div>
+                      <div><strong>Κατάσταση:</strong> ${p.katastasi_prosklisis}</div>
+                    </div>
+                  `).join('')}
+                </div>` : `<p class="muted">Καμία πρόσκληση ακόμη.</p>`}
+            </div>`;
+
+          document.getElementById('btnInvite').addEventListener('click', async () => {
+            const id_didaskonta = document.getElementById('inviteDidaskonId').value.trim();
+            if (!id_didaskonta) return alert('Συμπληρώστε κωδικό διδάσκοντα.');
+            try {
+              await apiFetch(`${API_BASE}/trimelis/prosklisi`, {
+                method: 'POST', headers: { 'Content-Type':'application/json' },
+                body: JSON.stringify({ id_diplomatikis: d.id, id_didaskonta })
+              });
+              alert('Η πρόσκληση στάλθηκε.');
+              showManageDiplomatiki();
+            } catch (err) { alert(err.message); }
+          });
+
+        } else if (d.katastasi === 'ypo_eksetasi') {
+          // Periptwsh - ypo exetasi
+          content.innerHTML = `
+            <div class="card">
+              <h2>Διαχείριση Διπλωματικής — Υπό Εξέταση</h2>
+              <h3>Πρόχειρο κείμενο και σύνδεσμοι</h3>
+              <form id="formDraft" enctype="multipart/form-data" class="card">
+                <input type="hidden" name="id_diplomatikis" value="${d.id}" />
+                <label>Ανέβασμα αρχείου (PDF):</label>
+                <input type="file" name="arxeio" accept="application/pdf" />
+                <label>Σύνδεσμος επιπλέον υλικού (προαιρετικά):</label>
+                <input type="text" name="link" placeholder="π.χ. Google Drive, YouTube" value="${d.link_extra || ''}" />
+                <div style="margin-top:8px;">
+                  <button type="submit">Αποθήκευση Πρόχειρου</button>
+                </div>
+              </form>
+              <div class="sep"></div>
+              <h3>Ορισμός παρουσίασης</h3>
+              <form id="formAnakoinwsi" class="card">
+                <div class="row">
+                  <div>
+                    <label>Ημερομηνία</label>
+                    <input type="date" name="imerominia_parousiasis" value="${d.imerominia_parousiasis ? d.imerominia_parousiasis.split('T')[0] : ''}" required />
+                  </div>
+                  <div>
+                    <label>Ώρα</label>
+                    <input type="time" name="ora_parousiasis" value="${d.ora_parousiasis || ''}" required />
+                  </div>
+                </div>
+                <div class="row">
+                  <div>
+                    <label>Τρόπος</label>
+                    <select name="tropo_parousiasis" required>
+                      <option value="di_zosis" ${d.tropo_parousiasis === 'di_zosis' ? 'selected' : ''}>Δια ζώσης</option>
+                      <option value="online" ${d.tropo_parousiasis === 'online' ? 'selected' : ''}>Online</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Αίθουσα / Σύνδεσμος</label>
+                    <input type="text" name="topo_thea" value="${d.topo_thea || ''}" placeholder="π.χ. Α2 ή Zoom link" required />
+                  </div>
+                </div>
+                <div style="margin-top:8px;">
+                  <button type="submit">Αποθήκευση Παρουσίασης</button>
+                </div>
+              </form>
+              <div class="sep"></div>
+              <h3>Πρακτικό εξέτασης</h3>
+              <div id="praktikoBox" class="card">
+                <button id="btnLoadPraktiko">Προβολή Πρακτικού (HTML)</button>
+                <div id="praktikoHtml" style="margin-top:10px;"></div>
+              </div>
+              <div class="sep"></div>
+              <h3>Σύνδεσμος Νημερτής</h3>
+              <div class="card">
+                <label>URL αποθετηρίου</label>
+                <input id="nimertis_input" placeholder="https://..." value="${d.link_nimertis || ''}" />
+                <div style="margin-top:8px;">
+                  <button id="btnSaveNimertis">Αποθήκευση</button>
+                </div>
+              </div>
+            </div>`;
+
+          // Submit draft
+          document.getElementById('formDraft').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.currentTarget;
+            const fd = new FormData(form);
+            try {
+              await fetch(`${API_BASE}/diplomatiki/upload_draft`, { method: 'POST', body: fd })
+                .then(async r => {
+                  if (!r.ok) throw new Error((await r.json()).error || 'Σφάλμα');
+                });
+              alert('Το πρόχειρο καταχωρήθηκε.');
+            } catch (err) { alert(err.message); }
+          });
+
+          // Submit anakoinwsi
+          document.getElementById('formAnakoinwsi').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.currentTarget;
+            const payload = {
+              id_diplomatikis: d.id,
+              imerominia_parousiasis: form.imerominia_parousiasis.value,
+              ora_parousiasis: form.ora_parousiasis.value,
+              tropo_parousiasis: form.tropo_parousiasis.value,
+              topo_thea: form.topo_thea.value
+            };
+            try {
+              await apiFetch(`${API_BASE}/diplomatiki/anakoinwsi`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify(payload)
+              });
+              alert('Η παρουσίαση καταχωρήθηκε.');
+            } catch (err) { alert(err.message); }
+          });
+
+          // Load praktiko
+          document.getElementById('btnLoadPraktiko').addEventListener('click', async () => {
+            const box = document.getElementById('praktikoHtml');
+            box.innerHTML = 'Φόρτωση...';
+            try {
+              const praktiko = await apiFetch(`${API_BASE}/diplomatiki/${d.id}/praktiko`);
+              box.innerHTML = praktiko.html || '<span class="muted">Δεν είναι ακόμη διαθέσιμο.</span>';
+            } catch (err) {
+              box.innerHTML = `<span class="error">${err.message}</span>`;
+            }
+          });
+
+          // Save nimertis
+          document.getElementById('btnSaveNimertis').addEventListener('click', async () => {
+            const link = document.getElementById('nimertis_input').value.trim();
+            if (!link) return alert('Συμπληρώστε σύνδεσμο.');
+            try {
+              await apiFetch(`${API_BASE}/diplomatiki/nimertis`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ id_diplomatikis: d.id, link_nimertis: link })
+              });
+              alert('Ο σύνδεσμος αποθηκεύτηκε.');
+            } catch (err) { alert(err.message); }
+          });
+
+        } else if (d.katastasi === 'peratomeni') {
+          // Periptwsh - peratomeni
+          const logs = await apiFetch(`${API_BASE}/diplomatiki/${d.id}/logs`);
+          content.innerHTML = `
+            <div class="card">
+              <h2>Πληροφορίες ΔΕ — Περατωμένη</h2>
+              <h3>${d.titlos}</h3>
+              <p>${d.perigrafi || ''}</p>
+              <p><strong>Κατάσταση:</strong> <span class="pill">περατωμένη</span></p>
+              <div class="sep"></div>
+              <h3>Ιστορικό Καταστάσεων</h3>
+              ${logs.length ? logs.map(l => `
+                <div class="card">
+                  <div><strong>Από:</strong> ${l.palia_katastasi} → <strong>Σε:</strong> ${l.nea_katastasi}</div>
+                  <div class="muted">${new Date(l.hmerominia_allagis).toLocaleString('el-GR')}</div>
+                </div>`).join('') : `<p class="muted">Δεν υπάρχουν καταγεγραμμένες αλλαγές.</p>`}
+              <div class="sep"></div>
+              <h3>Πρακτικό Εξέτασης</h3>
+              <div id="praktikoHtml"></div>
+              <button id="btnLoadPraktiko">Προβολή Πρακτικού (HTML)</button>
+            </div>`;
+
+          document.getElementById('btnLoadPraktiko').addEventListener('click', async () => {
+            const box = document.getElementById('praktikoHtml');
+            box.innerHTML = 'Φόρτωση...';
+            try {
+              const praktiko = await apiFetch(`${API_BASE}/diplomatiki/${d.id}/praktiko`);
+              box.innerHTML = praktiko.html || '<span class="muted">Δεν είναι διαθέσιμο.</span>';
+            } catch (err) {
+              box.innerHTML = `<span class="error">${err.message}</span>`;
+            }
+          });
+        } else {
+          // Allh katastasi: apla plhroforiako
+          content.innerHTML = `
+            <div class="card">
+              <h2>Διαχείριση Διπλωματικής</h2>
+              <p>Τρέχουσα κατάσταση: <strong>${d.katastasi}</strong></p>
+              <p class="muted">Δεν υπάρχουν ενέργειες για την παρούσα κατάσταση.</p>
+            </div>`;
+        }
+      } catch (err) {
+        content.innerHTML = `<div class="card error">${err.message}</div>`;
+      }
+    }
+
+    // !!! Wire up buttons 
+    document.getElementById('btnListThemata').addEventListener('click', showThemataList);
+    document.getElementById('btnMyDiplomatiki').addEventListener('click', showMyDiplomatiki);
+    document.getElementById('btnEditProfile').addEventListener('click', showEditProfile);
+    document.getElementById('btnManageDiplomatiki').addEventListener('click', showManageDiplomatiki);
+
+    // Proairetika emfanisi default enothtas
+    showMyDiplomatiki();
+  </script>
+</body>
+</html>

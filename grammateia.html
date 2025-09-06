@@ -1,15 +1,193 @@
-<div class="grammateia centered">
-  <h1>Καλωσήρθατε, <span id="usernameDisplay"></span>!</h1>
-  <p>This is the dashboard for User Type secretariat.</p>
-</div>
-<script>
-  const username = localStorage.getItem('username');
-  const nameSpan = document.getElementById('usernameDisplay');
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Πίνακας Ελέγχου - Γραμματεία</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 0; background: #f4f6f9; }
+    header { background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    h1 { margin: 0; font-size: 20px; }
+    button.logout { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+    section { background: white; margin: 20px; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    section h2 { margin-top: 0; color: #2c3e50; }
+    input, select, textarea, button { margin: 5px 0; padding: 8px; width: 100%; box-sizing: border-box; }
+    button { background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #2980b9; }
+    .success-message { color: green; font-weight: bold; }
+    .error-message { color: red; font-weight: bold; }
+    .list-item { background: #ecf0f1; padding: 10px; margin-bottom: 5px; border-radius: 5px; }
+  </style>
+</head>
+<body>
 
-  if (username && nameSpan) {
-    nameSpan.textContent = username.charAt(0).toUpperCase() + username.slice(1);
-  } else {
-    // Optional: redirect or reload main view if loaded out of context
-    document.getElementById('main-content').innerHTML = '<p>Unauthorized. Please log in.</p>';
-  }
-</script>
+  <header>
+    <h1>Καλώς ήρθατε!</h1>
+    <button class="logout" onclick="logout()">Αποσύνδεση</button>
+  </header>
+
+    <section>
+    <h2>Καταχώρηση Νέου Χρήστη</h2>
+    <form id="form_users">
+      <select id="user_role" required>
+        <option value="foititis">Φοιτητής</option>
+        <option value="didaskon">Διδάσκων</option>
+      </select>
+      <input type="text" id="user_onoma" placeholder="Όνομα" required />
+      <input type="text" id="user_epitheto" placeholder="Επίθετο" required />
+      <input type="email" id="user_email" placeholder="Email" required />
+      <input type="password" id="user_kodikos" placeholder="Κωδικός" required />
+      <input type="text" id="user_am" placeholder="Αριθμός Μητρώου (για Φοιτητή)" />
+      <button type="submit">Καταχώρηση</button>
+    </form>
+  </section>
+
+    <section>
+    <h2>Όλες οι Διπλωματικές</h2>
+    <div id="lista_diplwmatikwn"></div>
+  </section>
+
+    <section>
+    <h2>Ορισμός Ημερομηνίας Εξέτασης</h2>
+    <form id="form_orismos">
+      <input type="number" id="id_diplomatikis_exetasi" placeholder="ID Διπλωματικής" required />
+      <input type="date" id="hmerominia_exetasis" required />
+      <input type="time" id="wra_exetasis" required />
+      <select id="tropos_exetasis">
+        <option value="Δια ζώσης">Δια ζώσης</option>
+        <option value="Online">Online</option>
+      </select>
+      <input type="text" id="topothesia_exetasis" placeholder="Αίθουσα/Σύνδεσμος" required />
+      <button type="submit">Αποθήκευση</button>
+    </form>
+  </section>
+
+    <section>
+    <h2>Ακύρωση Διπλωματικής</h2>
+    <form id="form_akyrosi">
+      <input type="number" id="id_diplomatikis_akyrosi" placeholder="ID Διπλωματικής" required />
+      <input type="text" id="logos_akyrosis" placeholder="Λόγος ακύρωσης" required />
+      <button type="submit">Ακύρωση</button>
+    </form>
+  </section>
+
+    <section>
+    <h2>Προβολή Πρακτικού Εξέτασης</h2>
+    <form id="form_praktiko">
+      <input type="number" id="id_diplomatikis_praktiko" placeholder="ID Διπλωματικής" required />
+      <button type="submit">Άνοιγμα Πρακτικού</button>
+    </form>
+  </section>
+
+  <script>
+    // Boithitiki synartisi gia fetching me error handling
+    async function apiFetch(url, opts = {}) {
+      const res = await fetch(url, opts);
+      const data = await res.json().catch(()=> ({}));
+      if (!res.ok) throw new Error(data.error || 'Σφάλμα αιτήματος.');
+      return data;
+    }
+
+    function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+    // Fortwsi twn diplwmatikwn
+    async function fortwseDiplwmatikes() {
+      try {
+        const data = await apiFetch('/api/grammateia/diplwmatikes');
+        let html = "";
+        data.forEach(d => {
+          html += `<div class="list-item"><b>ID: ${d.id}</b> - ${d.titlos}<br>Φοιτητής: ${d.foititis_onoma} ${d.foititis_epitheto} (${d.am})<br>Κατάσταση: ${d.katastasi}</div>`;
+        });
+        document.getElementById("lista_diplwmatikwn").innerHTML = html;
+      } catch (err) {
+        console.error("Σφάλμα:", err.message);
+        document.getElementById("lista_diplwmatikwn").innerHTML = `<div class="error-message">Σφάλμα φόρτωσης διπλωματικών: ${err.message}</div>`;
+      }
+    }
+
+    // Kataxorisi neoy xristi
+    document.getElementById("form_users").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = {
+        onoma: document.getElementById("user_onoma").value,
+        epitheto: document.getElementById("user_epitheto").value,
+        email: document.getElementById("user_email").value,
+        kodikos: document.getElementById("user_kodikos").value,
+        rolos: document.getElementById("user_role").value
+      };
+      if (payload.rolos === 'foititis') {
+        payload.am = document.getElementById("user_am").value;
+      }
+      try {
+        await apiFetch('/api/grammateia/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        alert("Ο χρήστης καταχωρήθηκε επιτυχώς!");
+        e.target.reset();
+      } catch (err) {
+        alert(`Σφάλμα: ${err.message}`);
+      }
+    });
+
+
+    // Orismos eksetasis
+    document.getElementById("form_orismos").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = {
+        id_diplomatikis: Number(document.getElementById("id_diplomatikis_exetasi").value),
+        hmerominia: document.getElementById("hmerominia_exetasis").value,
+        wra: document.getElementById("wra_exetasis").value,
+        tropos: document.getElementById("tropos_exetasis").value,
+        topothesia: document.getElementById("topothesia_exetasis").value
+      };
+      try {
+        await apiFetch('/api/grammateia/orismos_exetasis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        alert("Η ημερομηνία εξέτασης ορίστηκε!");
+        fortwseDiplwmatikes();
+      } catch (err) {
+        alert(`Σφάλμα: ${err.message}`);
+      }
+    });
+
+    // Akirosi diplwmatikis
+    document.getElementById("form_akyrosi").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = {
+        id_diplomatikis: Number(document.getElementById("id_diplomatikis_akyrosi").value),
+        logos: document.getElementById("logos_akyrosis").value
+      };
+      try {
+        await apiFetch('/api/grammateia/akyrosi_diplwmatikis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        alert("Η διπλωματική ακυρώθηκε!");
+        fortwseDiplwmatikes();
+      } catch (err) {
+        alert(`Σφάλμα: ${err.message}`);
+      }
+    });
+
+    // Provoli praktikoy
+    document.getElementById("form_praktiko").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = Number(document.getElementById("id_diplomatikis_praktiko").value);
+      try {
+        const data = await apiFetch(`/api/grammateia/praktiko/${id}`);
+        window.open(data.link, '_blank');
+      } catch (err) {
+        alert(`Σφάλμα: ${err.message}`);
+      }
+    });
+
+    fortwseDiplwmatikes();
+  </script>
+</body>
+</html>
