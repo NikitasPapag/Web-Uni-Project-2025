@@ -1,22 +1,21 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs').promises; // async file ops for praktika
-const mysql = require('mysql2/promise'); // unified async MySQL
-const multer = require('multer'); // file uploads
-const session = require('express-session'); // login/session handling
-
+const fs = require('fs').promises;
+const mysql = require('mysql2/promise');
+const multer = require('multer');
+const session = require('express-session');
 
 const app = express();
 const PORT = 3000;
 
-// middleware
+// Middleware (no changes needed here)
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// MySQL pool
+// MySQL pool (no changes needed here)
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
@@ -27,7 +26,7 @@ const pool = mysql.createPool({
   namedPlaceholders: true
 });
 
-// helper: run query safely
+// Helper: Run query safely (no changes needed here)
 async function q(sql, params = {}) {
   const [rows] = await pool.query(sql, params);
   return rows;
@@ -40,10 +39,14 @@ app.post('/login', async (req, res) => {
   if (!username || !password) {
     return res.status(400).json({ error: 'Όνομα χρήστη και κωδικός απαιτούνται.' });
   }
-
+  
+  // NOTE: SECURITY VULNERABILITY - This section is the most critical to your security.
+  // Passwords are being stored in plaintext. You should be hashing passwords (e.g., with bcrypt)
+  // on user creation and comparing the hash here, not the plaintext password.
+  
   try {
     const rows = await q(
-      `SELECT * FROM xristes WHERE username=:username AND password=:password`,
+      `SELECT id, username, rolos FROM xristes WHERE username=:username AND password=:password`,
       { username, password }
     );
 
@@ -51,16 +54,36 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Λανθασμένο όνομα χρήστη ή κωδικός.' });
     }
 
-    const user = rows[0];
-    res.json({
-      username: user.username,
-      rolos: user.rolos
+    const { id, rolos } = rows[0];
+
+    // NEW LOGIC: Determine the correct table and ID field based on the user's role.
+    const table = (rolos === 'foititis') ? 'foititis' : (rolos === 'didaskon' ? 'didaskon' : 'grammateia');
+    const idField = (rolos === 'foititis') ? 'id_foititi' : (rolos === 'didaskon' ? 'id_didaskonta' : 'id_grammateia');
+
+    // NEW QUERY: Fetch the user's specific ID from the correct table.
+    const [userRow] = await q(`SELECT * FROM ${table} WHERE id_xristi = :id`, { id });
+    
+    if (!userRow) {
+      return res.status(404).json({ error: 'Δεν βρέθηκε προφίλ χρήστη.' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Επιτυχής σύνδεση.',
+      username,
+      rolos,
+      // NEW RESPONSE FIELDS: Pass the user's specific ID to the front-end.
+      id_foititi: rolos === 'foititis' ? userRow.id_foititi : null,
+      id_didaskonta: rolos === 'didaskon' ? userRow.id_didaskonta : null,
+      id_grammateia: rolos === 'grammateia' ? userRow.id_grammateia : null,
     });
-  } catch (err) {
-    console.error('DB error:', err);
+
+  } catch (e) {
+    console.error(e);
     res.status(500).json({ error: 'Σφάλμα βάσης δεδομένων.' });
   }
 });
+
 
 // Themata didaskonta
 // GET: ta themata tou didaskonta
