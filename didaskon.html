@@ -50,13 +50,18 @@
   </main>
 
   <script>
-    const user = {
-      id: Number(localStorage.getItem('id_didaskonta')) || 1,
-      onoma: localStorage.getItem('did_onoma') || 'Διδάσκων',
-      email: localStorage.getItem('did_email') || 'didaskon@example.com'
-    };
-    document.getElementById('who').textContent = `${user.onoma} (${user.email})`;
+    const id = localStorage.getItem('id');
+    const username = localStorage.getItem('username');
+    const rolos = localStorage.getItem('rolos');
+    const API_BASE = 'http://localhost:3000/api';
 
+    if (!id || rolos !== 'didaskon') {
+      document.getElementById('content').innerHTML = `<section>Δεν είστε συνδεδεμένος/η ως Διδάσκων. Παρακαλώ κάντε είσοδο.</section>`;
+    } else {
+      // All functions will now use the correct `id` and `username` variables
+      document.getElementById('who').textContent = `${username}`;
+      showThemata();
+    }
     const content = document.getElementById('content');
 
     async function apiFetch(url, opts = {}) {
@@ -71,7 +76,7 @@
     async function showThemata() {
       content.innerHTML = '<section><h2>Τα Θέματά μου</h2><p>Φόρτωση...</p></section>';
       try {
-        const list = await apiFetch(`/api/didaskon/${user.id}/themata`);
+        const list = await apiFetch(`/api/didaskon/${id}/themata`);
         let html = `
           <section>
             <h2>Τα Θέματά μου</h2>
@@ -121,7 +126,7 @@
         await apiFetch('/api/themata', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ titlos, perigrafi, id_didaskonta: user.id })
+          body: JSON.stringify({ titlos, perigrafi, id_didaskonta: id })
         });
         showThemata();
       } catch (e) { alert(e.message); }
@@ -166,7 +171,7 @@
     async function showAitiseis() {
       content.innerHTML = '<section><h2>Αιτήσεις Φοιτητών</h2><p>Φόρτωση...</p></section>';
       try {
-        const list = await apiFetch(`/api/didaskon/${user.id}/aitiseis`);
+        const list = await apiFetch(`/api/didaskon/${id}/aitiseis`);
         if (!list.length) {
           content.innerHTML = `<section>Δεν υπάρχουν εκκρεμείς αιτήσεις.</section>`;
           return;
@@ -187,7 +192,7 @@
       }
     }
     async function viewAitiseisForThema(idThema) {
-      const list = await apiFetch(`/api/didaskon/${user.id}/aitiseis`);
+      const list = await apiFetch(`/api/didaskon/${id}/aitiseis`);
       const f = list.filter(x => x.id_thematos === idThema);
       if (!f.length) return alert('Δεν υπάρχουν αιτήσεις για το θέμα.');
       content.innerHTML = f.map(a => `
@@ -217,7 +222,7 @@
     async function showProskliseis() {
       content.innerHTML = '<section><h2>Προσκλήσεις Τριμελούς</h2><p>Φόρτωση...</p></section>';
       try {
-        const list = await apiFetch(`/api/didaskon/${user.id}/proskliseis`);
+        const list = await apiFetch(`/api/didaskon/${id}/proskliseis`);
         if (!list.length) {
           content.innerHTML = `<section>Δεν υπάρχουν προσκλήσεις.</section>`;
           return;
@@ -252,7 +257,7 @@
     async function showDiplomatikes() {
       content.innerHTML = '<section><h2>Οι Διπλωματικές μου</h2><p>Φόρτωση...</p></section>';
       try {
-        const list = await apiFetch(`/api/didaskon/${user.id}/diplwmatikes`);
+        const list = await apiFetch(`/api/didaskon/${id}/diplwmatikes`);
         if (!list.length) {
           content.innerHTML = `<section>Δεν υπάρχουν διπλωματικές υπό επίβλεψη.</section>`;
           return;
@@ -277,7 +282,7 @@
     async function showEpitropes() {
       content.innerHTML = '<section><h2>Τριμελείς Επιτροπές</h2><p>Φόρτωση...</p></section>';
       try {
-        const list = await apiFetch(`/api/didaskon/${user.id}/epitropes`);
+        const list = await apiFetch(`/api/didaskon/${id}/epitropes`);
         if (!list.length) {
           content.innerHTML = `<section>Δεν συμμετέχετε σε τριμελείς επιτροπές.</section>`;
           return;
@@ -309,7 +314,7 @@
         await apiFetch(`/api/diplomatikes/${idDipl}/vathmos`, {
           method: 'POST',
           headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({ id_didaskonta: user.id, bathmos: v, kritiki: k })
+          body: JSON.stringify({ id_didaskonta: id, bathmos: v, kritiki: k })
         });
         alert('Η βαθμολογία καταχωρήθηκε.');
       } catch (e) { alert(e.message); }

@@ -16,14 +16,13 @@
     button:hover { background: #2980b9; }
     .success-message { color: green; font-weight: bold; }
     .error-message { color: red; font-weight: bold; }
-    .list-item { background: #ecf0f1; padding: 10px; margin-bottom: 5px; border-radius: 5px; }
-  </style>
+    .list-item { background: #ecf0f1; padding: 10px; margin-bottom: 5px; border-radius: 5px; }
+  </style>
 </head>
 <body>
 
   <header>
     <h1>Καλώς ήρθατε!</h1>
-    <button class="logout" onclick="logout()">Αποσύνδεση</button>
   </header>
 
     <section>
@@ -36,7 +35,7 @@
       <input type="text" id="user_onoma" placeholder="Όνομα" required />
       <input type="text" id="user_epitheto" placeholder="Επίθετο" required />
       <input type="email" id="user_email" placeholder="Email" required />
-      <input type="password" id="user_kodikos" placeholder="Κωδικός" required />
+      <input type="password" id="user_password" placeholder="Κωδικός" required />
       <input type="text" id="user_am" placeholder="Αριθμός Μητρώου (για Φοιτητή)" />
       <button type="submit">Καταχώρηση</button>
     </form>
@@ -53,9 +52,9 @@
       <input type="number" id="id_diplomatikis_exetasi" placeholder="ID Διπλωματικής" required />
       <input type="date" id="hmerominia_exetasis" required />
       <input type="time" id="wra_exetasis" required />
-      <select id="tropos_exetasis">
-        <option value="Δια ζώσης">Δια ζώσης</option>
-        <option value="Online">Online</option>
+      <select id="tropo_parousiasis">
+        <option value="di_zosis">Δια ζώσης</option>
+        <option value="online">Online</option>
       </select>
       <input type="text" id="topothesia_exetasis" placeholder="Αίθουσα/Σύνδεσμος" required />
       <button type="submit">Αποθήκευση</button>
@@ -88,7 +87,7 @@
       return data;
     }
 
-    function logout() { localStorage.clear(); window.location.href = "login.html"; }
+    function logout() { localStorage.clear(); window.location.href = "index.html"; }
 
     // Fortwsi twn diplwmatikwn
     async function fortwseDiplwmatikes() {
@@ -112,7 +111,7 @@
         onoma: document.getElementById("user_onoma").value,
         epitheto: document.getElementById("user_epitheto").value,
         email: document.getElementById("user_email").value,
-        kodikos: document.getElementById("user_kodikos").value,
+        password: document.getElementById("user_password").value,
         rolos: document.getElementById("user_role").value
       };
       if (payload.rolos === 'foititis') {

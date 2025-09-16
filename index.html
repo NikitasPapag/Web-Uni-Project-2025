@@ -27,7 +27,35 @@
         if (e.target.id === 'arxiki-btn') {
           loadArxiki();
         }
+      document.addEventListener('submit', async (e) => {
+        if (e.target.id === 'login-form') {
+            e.preventDefault();
+            const usernameInput = e.target.querySelector('#username').value;
+            const passwordInput = e.target.querySelector('#password').value;
 
+            try {
+                const res = await fetch('http://localhost:3000/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: usernameInput, password: passwordInput })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    // Store the user info consistently using a single 'id' key
+                    localStorage.setItem('id', data.id);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('rolos', data.rolos);
+
+                    loadSelidaXristi(data.rolos, data.username);
+                } else {
+                    alert(data.error || 'Αποτυχία σύνδεσης.');
+                }
+            } catch (err) {
+                alert('Σφάλμα.');
+            }
+        }
+    });
         if (e.target.id === 'eisodos-btn') {
           loadLoginForm();
         }
@@ -148,8 +176,26 @@
     async function loadSelidaXristi(rolos, username) {
       try {
         const response = await fetch(`${rolos}.html`);
+        if (!response.ok) {
+            throw new Error(`Failed to load ${rolos}.html`);
+        }
         const html = await response.text();
-        document.getElementById('main-content').innerHTML = html;
+        const mainContent = document.getElementById('main-content');
+        mainContent.innerHTML = html;
+
+        // Find and remove any existing dynamically loaded scripts to prevent duplicates
+        const existingScript = document.body.querySelector('#dynamic-script');
+        if (existingScript) {
+            existingScript.remove();
+        }
+
+        const scriptElement = mainContent.querySelector('script');
+        if (scriptElement) {
+            const newScript = document.createElement('script');
+            newScript.textContent = scriptElement.textContent;
+            newScript.id = 'dynamic-script'; // Add an ID to easily find and remove it later
+            document.body.appendChild(newScript);
+        }
 
         const span = document.getElementById('usernameDisplay');
         if (span) {
@@ -157,8 +203,8 @@
         }
 
         updateHeaderButtons();
-      } catch {
-        document.getElementById('main-content').innerHTML = `<p>Error loading ${rolos} page.</p>`;
+      } catch (e) {
+        document.getElementById('main-content').innerHTML = `<p>Error loading ${rolos} page: ${e.message}</p>`;
       }
     }
 
