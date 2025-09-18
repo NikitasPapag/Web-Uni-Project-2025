@@ -48,27 +48,29 @@
     const rolos = localStorage.getItem('rolos');
     const API_BASE = 'http://localhost:3000/api';
 
-    const helloUserEl = document.getElementById('helloUser');
-    helloUserEl.textContent = username || 'Φοιτητή';
+    // The correct content container ID
     const content = document.getElementById('content');
+    const helloUserEl = document.getElementById('helloUser');
 
-    // Aplo guard an den yparxei session
-     if (!id || rolos !== 'foititis') {
-        document.getElementById('content').innerHTML = `
-            <div class="card error">
-                <h2>Σφάλμα Πρόσβασης</h2>
-                <p>Δεν είστε συνδεδεμένος/η ως Φοιτητής. Παρακαλώ κάντε είσοδο.</p>
-            </div>`;    } 
-      else {
-        document.getElementById('usernameDisplay').textContent = username;
-        showMyDiplomatiki();
+    // Display a welcome message if the element exists
+    if (helloUserEl) {
+      helloUserEl.textContent = username || 'Φοιτητή';
     }
 
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.clear();
-      window.location.href = '/login.html';
-    });
-
+    // Aplo guard an den yparxei session
+    if (!id || rolos !== 'foititis') {
+      content.innerHTML = `
+        <div class="card error">
+          <h2>Σφάλμα Πρόσβασης</h2>
+          <p>Δεν είστε συνδεδεμένος/η ως Φοιτητής. Παρακαλώ κάντε είσοδο.</p>
+        </div>`;
+    } else {
+      // Correctly set the username display and initialize the page
+      const usernameDisplay = document.getElementById('usernameDisplay');
+      if (usernameDisplay) usernameDisplay.textContent = username;
+      init();
+    }
+    
     // Ypologizei meres apo imerominia (YYYY-MM-DD)
     function daysSince(dateStr) {
       if (!dateStr) return null;
@@ -119,15 +121,13 @@
         html += `</div></div>`;
         content.innerHTML = html;
 
-        themata.forEach(t => {
-          const viewBtn = document.querySelector(`[data-id="${t.id}"]#btnViewThema_${t.id}`);
-          const assignBtn = document.querySelector(`[data-id="${t.id}"]#btnAskAssign_${t.id}`);
-        });
-
         // Koumpia provolis / anathesis
-        content.querySelectorAll('[data-id]').forEach(btn => {
-          if (btn.textContent.includes('Προβολή')) btn.addEventListener('click', () => viewSingleThema(btn.dataset.id));
-          else if (btn.textContent.includes('Αίτηση')) btn.addEventListener('click', () => askAssign(btn.dataset.id));
+        content.querySelectorAll('button[data-id]').forEach(btn => {
+          if (btn.textContent.includes('Προβολή')) {
+            btn.addEventListener('click', () => viewSingleThema(btn.dataset.id));
+          } else if (btn.textContent.includes('Αίτηση')) {
+            btn.addEventListener('click', () => askAssign(btn.dataset.id));
+          }
         });
 
       } catch (err) {
@@ -434,8 +434,8 @@
               alert('Ο σύνδεσμος αποθηκεύτηκε.');
             } catch (err) { alert(err.message); }
           });
-
         } else if (d.katastasi === 'peratomeni') {
+
           // Periptwsh - peratomeni
           const logs = await apiFetch(`${API_BASE}/diplomatiki/${d.id}/logs`);
           content.innerHTML = `
@@ -456,7 +456,6 @@
               <div id="praktikoHtml"></div>
               <button id="btnLoadPraktiko">Προβολή Πρακτικού (HTML)</button>
             </div>`;
-
           document.getElementById('btnLoadPraktiko').addEventListener('click', async () => {
             const box = document.getElementById('praktikoHtml');
             box.innerHTML = 'Φόρτωση...';
@@ -468,6 +467,7 @@
             }
           });
         } else {
+
           // Allh katastasi: apla plhroforiako
           content.innerHTML = `
             <div class="card">
@@ -481,17 +481,17 @@
       }
     }
 
-    // !!! Wire up buttons 
+    // Wire up buttons
     function init() {
-      document.getElementById('btnListThemata').addEventListener('click', showThemataList);
-      document.getElementById('btnMyDiplomatiki').addEventListener('click', showMyDiplomatiki);
-      document.getElementById('btnEditProfile').addEventListener('click', showEditProfile);
-      document.getElementById('btnManageDiplomatiki').addEventListener('click', showManageDiplomatiki);
-      showMyDiplomatiki();
+      const btnListThemata = document.getElementById('btnListThemata');
+      if (btnListThemata) btnListThemata.addEventListener('click', showThemataList);
+      const btnMyDiplomatiki = document.getElementById('btnMyDiplomatiki');
+      if (btnMyDiplomatiki) btnMyDiplomatiki.addEventListener('click', showMyDiplomatiki);
+      const btnEditProfile = document.getElementById('btnEditProfile');
+      if (btnEditProfile) btnEditProfile.addEventListener('click', showEditProfile);
+      const btnManageDiplomatiki = document.getElementById('btnManageDiplomatiki');
+      if (btnManageDiplomatiki) btnManageDiplomatiki.addEventListener('click', showManageDiplomatiki);
     }
-    
-    // Proairetika emfanisi default enothtas
-    showMyDiplomatiki();
-  </script>
+</script>
 </body>
 </html>

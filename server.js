@@ -235,52 +235,33 @@ app.post(`${API_BASE}/diplomatikes/anathesi`, (req, res) => {
 
 /* Get student's current diplomatiki (by student id) */
 app.get(`${API_BASE}/diplomatiki/byFoititis/:id`, (req, res) => {
-  const { id } = req.params;
-  const q = `
-    SELECT d.*, t.titlos, t.perigrafi, t.arxeio AS perigrafi_arxeio,
-           x.onoma, x.epitheto,
-           (SELECT GROUP_CONCAT(CONCAT(x2.onoma,' ',x2.epitheto) SEPARATOR ', ') 
-            FROM trimeloys tr JOIN xristes x2 ON tr.id_melous = x2.id 
-            WHERE tr.id_diplomatikis = d.id) AS melh_trimelous,
-           (SELECT GROUP_CONCAT(p.katastasi SEPARATOR ', ') FROM proskliseis p WHERE p.id_diplomatikis = d.id) AS proskliseis_status,
-           d.katastasi, d.hmerominia_anathesis, d.praktiko_link, d.nimertis_link, d.link_extra,
-           (SELECT GROUP_CONCAT(CONCAT(prev.katastasi,'->',k.katastasi,' @ ', s.imerominia) SEPARATOR ' || ')
-            FROM (
-              SELECT NULL as katastasi -- placeholder to satisfy structure if no logs
-            ) prev LIMIT 1
-           ) as logs_stub
-    FROM diplomatikes d
-    LEFT JOIN themata t ON d.id_thematos = t.id
-    LEFT JOIN xristes x ON d.id_foititi = x.id
-    WHERE d.id_foititi = ?
-    LIMIT 1
-  `;
-  connection.query(q, [id], (err, results) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'DB error' });
-    }
-    if (results.length === 0) return res.status(404).json({ error: 'Δεν βρέθηκε διπλωματική για τον φοιτητή.' });
-    // Normalize result fields expected by frontend
-    const d = results[0];
-    res.json({
-      id: d.id,
-      titlos: d.titlos,
-      perigrafi: d.perigrafi,
-      perigrafi_arxeio: d.perigrafi_arxeio,
-      katastasi: d.katastasi,
-      hmerominia_anathesis: d.hmerominia_anathesis,
-      melh_trimelous: d.melh_trimelous,
-      praktiko_link: d.praktiko_link,
-      link_extra: d.link_extra,
-      link_nimertis: d.nimertis_link,
-      imerominia_parousiasis: d.imerominia_parousiasis,
-      ora_parousiasis: d.ora_parousiasis,
-      tropo_parousiasis: d.tropo_parousiasis,
-      topothesia: d.topothesia
+    const { id } = req.params;
+    const q = `
+        SELECT
+            d.*,
+            t.titlos,
+            t.perigrafi,
+            t.arxeio AS perigrafi_arxeio,
+            GROUP_CONCAT(CONCAT(x.onoma, ' ', x.epitheto) SEPARATOR ', ') AS melh_trimelous
+        FROM diplomatikes AS d
+        JOIN themata AS t ON d.id_thematos = t.id
+        LEFT JOIN trimeloys AS tr ON d.id = tr.id_diplomatikis
+        LEFT JOIN xristes AS x ON tr.id_melous = x.id
+        WHERE d.id_foititi = ?
+        GROUP BY d.id
+    `;
+    connection.query(q, [id], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Database query failed.' });
+        }
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Δεν βρέθηκε διπλωματική εργασία για αυτόν τον φοιτητή.' });
+        }
+        res.json(results[0]);
     });
   });
-});
+
 
 /* Profile view & update */
 app.get(`${API_BASE}/profil/:id`, (req, res) => {

@@ -54,15 +54,14 @@
     const username = localStorage.getItem('username');
     const rolos = localStorage.getItem('rolos');
     const API_BASE = 'http://localhost:3000/api';
-
-    if (!id || rolos !== 'didaskon') {
-      document.getElementById('content').innerHTML = `<section>Δεν είστε συνδεδεμένος/η ως Διδάσκων. Παρακαλώ κάντε είσοδο.</section>`;
-    } else {
-      // All functions will now use the correct `id` and `username` variables
-      document.getElementById('who').textContent = `${username}`;
-      showThemata();
-    }
     const content = document.getElementById('content');
+      
+      if (!id || rolos !== 'didaskon') {
+          content.innerHTML = `<section>Δεν είστε συνδεδεμένος/η ως Διδάσκων. Παρακαλώ κάντε είσοδο.</section>`;
+      } else {
+          document.getElementById('who').textContent = `${username}`;
+          showThemata();
+      }
 
     async function apiFetch(url, opts = {}) {
       const res = await fetch(url, opts);

@@ -11,82 +11,69 @@
 
   <div id="main-content"></div>
 
-  <script>
-
+<script>
+   // Initial fetch for the header and page setup
     fetch('header.html')
       .then(res => res.text())
       .then(html => {
         document.getElementById('header-container').innerHTML = html;
         setupHeaderEvents();
-        updateHeaderButtons(); 
+        updateHeaderButtons();
         loadArxiki();
       });
 
+    // Event listeners are set up once
     function setupHeaderEvents() {
+      // Listener for general clicks on header buttons
       document.addEventListener('click', (e) => {
         if (e.target.id === 'arxiki-btn') {
           loadArxiki();
         }
-      document.addEventListener('submit', async (e) => {
-        if (e.target.id === 'login-form') {
-            e.preventDefault();
-            const usernameInput = e.target.querySelector('#username').value;
-            const passwordInput = e.target.querySelector('#password').value;
-
-            try {
-                const res = await fetch('http://localhost:3000/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: usernameInput, password: passwordInput })
-                });
-
-                const data = await res.json();
-                if (res.ok) {
-                    // Store the user info consistently using a single 'id' key
-                    localStorage.setItem('id', data.id);
-                    localStorage.setItem('username', data.username);
-                    localStorage.setItem('rolos', data.rolos);
-
-                    loadSelidaXristi(data.rolos, data.username);
-                } else {
-                    alert(data.error || 'Αποτυχία σύνδεσης.');
-                }
-            } catch (err) {
-                alert('Σφάλμα.');
-            }
-        }
-    });
         if (e.target.id === 'eisodos-btn') {
           loadLoginForm();
         }
-
         if (e.target.id === 'aposyndesi-btn') {
-          localStorage.removeItem('username');
+          localStorage.clear(); // Clears all user data
           loadArxiki();
         }
-
-        if (e.target.id === 'logariasmos-btn') {
-          e.preventDefault();
-          const username = localStorage.getItem('username');
-          const rolos = localStorage.getItem('rolos'); 
-          if (username && rolos === 'foititis') {
-            loadLogariasmosFoititi(username);
-          }
-        }
         if (e.target.id === 'user-button') {
+          const rolos = localStorage.getItem('rolos');
           const username = localStorage.getItem('username');
-          const rolos = localStorage.getItem('rolos'); 
-          if (username) {
+          if (rolos) {
             loadSelidaXristi(rolos, username);
           }
         }
-
-        if (e.target.id === 'logariasmos-dropdown') {
+      });
+      
+      // Listener for the login form submission
+      document.addEventListener('submit', async (e) => {
+        // The ID of the login form is 'loginForm'
+        if (e.target.id === 'loginForm') {
           e.preventDefault();
-          const username = localStorage.getItem('username');
-          const rolos = localStorage.getItem('rolos'); 
-          if (username && rolos === 'foititis') {
-            loadLogariasmosFoititi(username);
+          const usernameInput = e.target.querySelector('#username').value.trim().toLowerCase();
+          const passwordInput = e.target.querySelector('#password').value;
+          const errorMsg = document.getElementById('errorMsg');
+          
+          try {
+            const res = await fetch('http://localhost:3000/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username: usernameInput, password: passwordInput })
+            });
+    
+            const data = await res.json();
+            if (res.ok) {
+              // Correctly store all three pieces of data
+              localStorage.setItem('id', data.id);
+              localStorage.setItem('username', data.username);
+              localStorage.setItem('rolos', data.rolos);
+              
+              await loadSelidaXristi(data.rolos, data.username);
+            } else {
+              errorMsg.textContent = data.error || 'Αποτυχία σύνδεσης.';
+            }
+          } catch (err) {
+            errorMsg.textContent = 'Σφάλμα σύνδεσης. Ελέγξτε τον server.';
           }
         }
       });
@@ -102,75 +89,47 @@
       const userBtn = document.getElementById('user-button');
       const logariasmosLink = document.getElementById('logariasmos-dropdown');
 
-  if (username) {
-    eisodosBtn.style.display = 'none';
-    aposyndesiBtn.style.display = 'inline-block';
-    userMenu.style.display = 'inline-block';
+      if (username) {
+        eisodosBtn.style.display = 'none';
+        aposyndesiBtn.style.display = 'inline-block';
+        userMenu.style.display = 'inline-block';
 
-    // Set button label to capitalized username
-    userBtn.textContent = username.charAt(0).toUpperCase() + username.slice(1);
+        // Set button label to capitalized username
+        userBtn.textContent = username.charAt(0).toUpperCase() + username.slice(1);
 
-    if (rolos === 'foititis') {
-      logariasmosLink.style.display = 'block';
-    } else {
-      logariasmosLink.style.display = 'none';
+        if (rolos === 'foititis') {
+          logariasmosLink.style.display = 'block';
+        } else {
+          logariasmosLink.style.display = 'none';
+        }
+      } else {
+        eisodosBtn.style.display = 'inline-block';
+        aposyndesiBtn.style.display = 'none';
+        userMenu.style.display = 'none';
+      }
     }
-  } else {
-    eisodosBtn.style.display = 'inline-block';
-    aposyndesiBtn.style.display = 'none';
-    userMenu.style.display = 'none';
-  }
-}
 
     function loadArxiki() {
-  document.getElementById('main-content').innerHTML = `
-    <div class="welcome-message centered">
-      <h1>Καλωσήρθατε στην Πλατφόρμα</h1>
-      <p>Χρησιμοποιήστε την πλοήγηση στο επάνω μέρος για να συνδεθείτε ή να περιηγηθείτε.</p>
-    </div>
-  `;
-  updateHeaderButtons();
-}
+      document.getElementById('main-content').innerHTML = `
+        <div class="welcome-message centered">
+          <h1>Καλωσήρθατε στην Πλατφόρμα</h1>
+          <p>Χρησιμοποιήστε την πλοήγηση στο επάνω μέρος για να συνδεθείτε ή να περιηγηθείτε.</p>
+        </div>
+      `;
+      updateHeaderButtons();
+    }
 
     function loadLoginForm() {
       document.getElementById('main-content').innerHTML = `
         <form id="loginForm" class="login-form">
-        <input type="text" id="username" placeholder="Εισάγετε το username σας." required />
-        <input type="password" id="password" placeholder="Εισάγετε τον κωδικό σας." required />
-        <button type="submit">Είσοδος</button>          
-        <p id="errorMsg" class="error-msg"></p>
+          <input type="text" id="username" placeholder="Εισάγετε το username σας." required />
+          <input type="password" id="password" placeholder="Εισάγετε τον κωδικό σας." required />
+          <button type="submit">Είσοδος</button>          
+          <p id="errorMsg" class="error-msg"></p>
         </form>
       `;
 
       updateHeaderButtons();
-
-      document.getElementById('loginForm').addEventListener('submit', async function (e) {
-        e.preventDefault();
-        const username = document.getElementById('username').value.trim().toLowerCase();
-        const password = document.getElementById('password').value;
-        const errorMsg = document.getElementById('errorMsg');
-
-        try {
-        const response = await fetch('http://localhost:3000/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          errorMsg.textContent = data.error || 'Σφάλμα.';
-          return;
-        }
-
-        localStorage.setItem('username', data.username);
-        localStorage.setItem('rolos', data.rolos);
-        await loadSelidaXristi(data.rolos, data.username);
-      } catch {
-        errorMsg.textContent = 'Αποτυχία σύνδεσης.';
-      }
-     });
     }
 
     async function loadSelidaXristi(rolos, username) {
@@ -207,25 +166,6 @@
         document.getElementById('main-content').innerHTML = `<p>Error loading ${rolos} page: ${e.message}</p>`;
       }
     }
-
-    async function loadLogariasmosFoititi(username) {
-      try {
-        const response = await fetch('logariasmos_foititi.html');
-        if (!response.ok) throw new Error('Η σελίδα δεν υπάρχει.');
-
-        const html = await response.text();
-        document.getElementById('main-content').innerHTML = html;
-
-        const span = document.getElementById('usernameDisplay');
-        if (span) {
-          span.textContent = username.charAt(0).toUpperCase() + username.slice(1);
-        }
-
-        updateHeaderButtons();
-      } catch {
-        document.getElementById('main-content').innerHTML = `<p>Σφάλμα κατά την φόρτωση της σελίδας χρήστη.</p>`;
-      }
-    }
-  </script>
+</script>
 </body>
 </html>
