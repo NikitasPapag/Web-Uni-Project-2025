@@ -79,6 +79,7 @@
   </section>
 
   <script>
+  
     // Boithitiki synartisi gia fetching me error handling
     async function apiFetch(url, opts = {}) {
       const res = await fetch(url, opts);
@@ -107,7 +108,7 @@
     // Kataxorisi neoy xristi
     document.getElementById("form_users").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const payload = {
+      const payload = {
         onoma: document.getElementById("user_onoma").value,
         epitheto: document.getElementById("user_epitheto").value,
         email: document.getElementById("user_email").value,

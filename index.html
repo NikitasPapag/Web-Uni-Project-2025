@@ -12,7 +12,7 @@
   <div id="main-content"></div>
 
 <script>
-   // Initial fetch for the header and page setup
+   //Arxiko setup
     fetch('header.html')
       .then(res => res.text())
       .then(html => {
@@ -22,9 +22,8 @@
         loadArxiki();
       });
 
-    // Event listeners are set up once
     function setupHeaderEvents() {
-      // Listener for general clicks on header buttons
+      // Listener gia ta koumpia tou header
       document.addEventListener('click', (e) => {
         if (e.target.id === 'arxiki-btn') {
           loadArxiki();
@@ -33,7 +32,7 @@
           loadLoginForm();
         }
         if (e.target.id === 'aposyndesi-btn') {
-          localStorage.clear(); // Clears all user data
+          localStorage.clear(); // Svisimo twn dedomenwn ths sundeshs
           loadArxiki();
         }
         if (e.target.id === 'user-button') {
@@ -45,9 +44,9 @@
         }
       });
       
-      // Listener for the login form submission
+      // Listener gia thn ypovoli tou login form 
       document.addEventListener('submit', async (e) => {
-        // The ID of the login form is 'loginForm'
+        // To ID tou login form einai 'loginForm'
         if (e.target.id === 'loginForm') {
           e.preventDefault();
           const usernameInput = e.target.querySelector('#username').value.trim().toLowerCase();
@@ -63,7 +62,7 @@
     
             const data = await res.json();
             if (res.ok) {
-              // Correctly store all three pieces of data
+              // Apothikeusi dedomenwn sundeshs sto localStorage
               localStorage.setItem('id', data.id);
               localStorage.setItem('username', data.username);
               localStorage.setItem('rolos', data.rolos);
@@ -91,8 +90,8 @@ function updateHeaderButtons() {
     aposyndesiBtn.style.display = 'inline-block';
     userBtn.style.display = 'inline-block';
 
-    // Set button label to capitalized username
-    userBtn.textContent = username.charAt(0).toUpperCase() + username.slice(1);
+    // Orismos onomatos xristi sto koumpi
+    userBtn.textContent = username;
   } else {
     eisodosBtn.style.display = 'inline-block';
     aposyndesiBtn.style.display = 'none';
@@ -132,7 +131,7 @@ function updateHeaderButtons() {
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = html;
 
-    // Find and execute the script from the loaded HTML
+    // Ektelesi tou script apo to HTML pou fortwthke
     const scriptElement = mainContent.querySelector('script');
     if (scriptElement) {
         const newScript = document.createElement('script');
@@ -140,7 +139,7 @@ function updateHeaderButtons() {
         document.body.appendChild(newScript);
     }
 
-    // Call the correct initialization function based on the role
+    // Klhsh synarthshs arxikopoihshs analoga ton rolo tou xristi
     if (rolos === 'foititis') {
         if (typeof initFoititisPage === 'function') {
             initFoititisPage(username);

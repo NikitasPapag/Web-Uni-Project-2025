@@ -7,9 +7,6 @@
   <style>
     :root { --p:#059669; --p2:#10b981; --red:#dc2626; }
     body { font-family: system-ui, sans-serif; background:#f9fafb; margin:0; }
-    header { background:#065f46; color:#fff; padding:16px; display:flex; align-items:center; justify-content:space-between; }
-    header h1 { font-size:18px; margin:0; }
-    header .who { opacity:.9; font-size:14px; }
     main { max-width:1000px; margin:20px auto; padding:0 12px; }
     .bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     button { padding:8px 12px; border:0; border-radius:8px; cursor:pointer; background:var(--p); color:#fff; }
@@ -33,8 +30,7 @@
 </head>
 <body>
   <header>
-    <h1>Πίνακας Διδάσκοντα</h1>
-    <div class="who">Συνδεδεμένος: <span id="who"></span></div>
+  <h1>Καλώς ήρθατε <span id="who"></span> !</h1>
   </header>
 
   <main>
@@ -71,9 +67,8 @@
     }
     const escapeHtml = (s='') => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
-    // Themata
+    // Themata didaskonta
     async function showThemata() {
-      content.innerHTML = '<section><h2>Τα Θέματά μου</h2><p>Φόρτωση...</p></section>';
       try {
         const list = await apiFetch(`/api/didaskon/${id}/themata`);
         let html = `
@@ -103,6 +98,7 @@
       }
     }
 
+    // Neo thema didaskonta
     function formNewThema() {
       content.innerHTML = `
         <section>
@@ -168,7 +164,6 @@
 
     // Aitiseis 
     async function showAitiseis() {
-      content.innerHTML = '<section><h2>Αιτήσεις Φοιτητών</h2><p>Φόρτωση...</p></section>';
       try {
         const list = await apiFetch(`/api/didaskon/${id}/aitiseis`);
         if (!list.length) {
@@ -219,7 +214,6 @@
 
     // Proskliseis
     async function showProskliseis() {
-      content.innerHTML = '<section><h2>Προσκλήσεις Τριμελούς</h2><p>Φόρτωση...</p></section>';
       try {
         const list = await apiFetch(`/api/didaskon/${id}/proskliseis`);
         if (!list.length) {
@@ -254,7 +248,6 @@
 
     // Diplomatikes
     async function showDiplomatikes() {
-      content.innerHTML = '<section><h2>Οι Διπλωματικές μου</h2><p>Φόρτωση...</p></section>';
       try {
         const list = await apiFetch(`/api/didaskon/${id}/diplwmatikes`);
         if (!list.length) {
@@ -279,7 +272,6 @@
 
     // Epitropes
     async function showEpitropes() {
-      content.innerHTML = '<section><h2>Τριμελείς Επιτροπές</h2><p>Φόρτωση...</p></section>';
       try {
         const list = await apiFetch(`/api/didaskon/${id}/epitropes`);
         if (!list.length) {
@@ -318,18 +310,18 @@
         alert('Η βαθμολογία καταχωρήθηκε.');
       } catch (e) { alert(e.message); }
     }
-
-    function initDidaskonPage(username) {
-        document.getElementById('btnThemata').onclick = showThemata;
-        document.getElementById('btnAitiseis').onclick = showAitiseis;
-        document.getElementById('btnProskliseis').onclick = showProskliseis;
-        document.getElementById('btnDiplomatikes').onclick = showDiplomatikes;
-        document.getElementById('btnEpitropes').onclick = showEpitropes;
-        const span = document.getElementById('usernameDisplay');
-        if (span) {
-            span.textContent = username.charAt(0).toUpperCase() + username.slice(1);
-        }
+    //Synartisi arxikopoihshs selidas didaskonta pou kalei to index
+function initDidaskonPage(username) {
+    document.getElementById('btnThemata').onclick = showThemata;
+    document.getElementById('btnAitiseis').onclick = showAitiseis;
+    document.getElementById('btnProskliseis').onclick = showProskliseis;
+    document.getElementById('btnDiplomatikes').onclick = showDiplomatikes;
+    document.getElementById('btnEpitropes').onclick = showEpitropes;
+    const span = document.getElementById('who');
+    if (span) {
+        span.textContent = username;
     }
+}
   </script>
 </body>
 </html>

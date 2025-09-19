@@ -48,11 +48,11 @@
     const rolos = localStorage.getItem('rolos');
     const API_BASE = 'http://localhost:3000/api';
 
-    // The correct content container ID
+    // To swsto content container ID
     const content = document.getElementById('content');
     const helloUserEl = document.getElementById('helloUser');
 
-    // Display a welcome message if the element exists
+    // Welcome message an yparxei o foititis
     if (helloUserEl) {
       helloUserEl.textContent = username || 'Φοιτητή';
     }
@@ -65,7 +65,7 @@
           <p>Δεν είστε συνδεδεμένος/η ως Φοιτητής. Παρακαλώ κάντε είσοδο.</p>
         </div>`;
     } else {
-      // Correctly set the username display and initialize the page
+      // Arxikopoihsh selidas kai provoli username
       const usernameDisplay = document.getElementById('usernameDisplay');
       if (usernameDisplay) usernameDisplay.textContent = username;
       init();
@@ -97,7 +97,6 @@
 
     // Provoli diathesimwn thematwn
     async function showThemataList() {
-      content.innerHTML = `<div class="card">Φόρτωση θεμάτων...</div>`;
       try {
         const themata = await apiFetch(`${API_BASE}/themata`);
         if (!themata.length) {
@@ -173,13 +172,12 @@
       }
     }
 
-    // Provoli trexoysas D.E
+    // Provoli trexoysas diplomatikis
     async function showMyDiplomatiki() {
       if (!id) {
         content.innerHTML = `<div class="card error">Δεν βρέθηκε συνεδρία χρήστη.</div>`;
         return;
       }
-      content.innerHTML = `<div class="card">Φόρτωση στοιχείων διπλωματικής...</div>`;
       try {
         const d = await apiFetch(`${API_BASE}/diplomatiki/byFoititis/${id}`);
         const days = daysSince(d.hmerominia_anathesis);
@@ -201,7 +199,6 @@
     // Epeksergasia profil
     async function showEditProfile() {
       if (!id) return content.innerHTML = `<div class="card error">Δεν βρέθηκε συνεδρία χρήστη.</div>`;
-      content.innerHTML = `<div class="card">Φόρτωση προφίλ...</div>`;
       try {
         const p = await apiFetch(`${API_BASE}/profil/${id}`);
         content.innerHTML = `
@@ -264,7 +261,6 @@
     // DIaxeirisi diplwmatikis
     async function showManageDiplomatiki() {
       if (!id) return content.innerHTML = `<div class="card error">Δεν βρέθηκε συνεδρία χρήστη.</div>`;
-      content.innerHTML = `<div class="card">Φόρτωση...</div>`;
       try {
         const d = await apiFetch(`${API_BASE}/diplomatiki/byFoititis/${id}`);
         if (!d) {
@@ -272,7 +268,7 @@
         }
         
         if (d.katastasi === 'ypo_anathesi') {
-          // periptwsh-ypo anathesi
+          // periptwsh- ypo anathesi
           const proskliseis = await apiFetch(`${API_BASE}/trimelis/proskliseis/${d.id}`);
           content.innerHTML = `
             <div class="card">
@@ -376,7 +372,7 @@
               </div>
             </div>`;
 
-          // Submit draft
+          // Ypovoli proxeirou
           document.getElementById('formDraft').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.currentTarget;
@@ -390,7 +386,7 @@
             } catch (err) { alert(err.message); }
           });
 
-          // Submit anakoinwsi
+          // Ypovoli anakoinwsis
           document.getElementById('formAnakoinwsi').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.currentTarget;
@@ -468,7 +464,7 @@
           });
         } else {
 
-          // Allh katastasi: apla plhroforiako
+          // Allh katastasi: apla plhroforiaka
           content.innerHTML = `
             <div class="card">
               <h2>Διαχείριση Διπλωματικής</h2>
@@ -481,7 +477,7 @@
       }
     }
 
-    // New function to be called from index.html
+    // Synartisi arxikopoihshs selidas foititi pou kalei to index
     function initFoititisPage(username) {
         const btnListThemata = document.getElementById('btnListThemata');
       if (btnListThemata) btnListThemata.addEventListener('click', showThemataList);
