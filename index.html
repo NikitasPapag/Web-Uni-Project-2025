@@ -79,36 +79,26 @@
       });
     }
 
-    function updateHeaderButtons() {
-      const username = localStorage.getItem('username');
-      const rolos = localStorage.getItem('rolos');
+function updateHeaderButtons() {
+  const username = localStorage.getItem('username');
 
-      const eisodosBtn = document.getElementById('eisodos-btn');
-      const aposyndesiBtn = document.getElementById('aposyndesi-btn');
-      const userMenu = document.getElementById('user-dropdown-container');
-      const userBtn = document.getElementById('user-button');
-      const logariasmosLink = document.getElementById('logariasmos-dropdown');
+  const eisodosBtn = document.getElementById('eisodos-btn');
+  const aposyndesiBtn = document.getElementById('aposyndesi-btn');
+  const userBtn = document.getElementById('user-button');
 
-      if (username) {
-        eisodosBtn.style.display = 'none';
-        aposyndesiBtn.style.display = 'inline-block';
-        userMenu.style.display = 'inline-block';
+  if (username) {
+    eisodosBtn.style.display = 'none';
+    aposyndesiBtn.style.display = 'inline-block';
+    userBtn.style.display = 'inline-block';
 
-        // Set button label to capitalized username
-        userBtn.textContent = username.charAt(0).toUpperCase() + username.slice(1);
-
-        if (rolos === 'foititis') {
-          logariasmosLink.style.display = 'block';
-        } else {
-          logariasmosLink.style.display = 'none';
-        }
-      } else {
-        eisodosBtn.style.display = 'inline-block';
-        aposyndesiBtn.style.display = 'none';
-        userMenu.style.display = 'none';
-      }
-    }
-
+    // Set button label to capitalized username
+    userBtn.textContent = username.charAt(0).toUpperCase() + username.slice(1);
+  } else {
+    eisodosBtn.style.display = 'inline-block';
+    aposyndesiBtn.style.display = 'none';
+    userBtn.style.display = 'none';
+  }
+}
     function loadArxiki() {
       document.getElementById('main-content').innerHTML = `
         <div class="welcome-message centered">
@@ -133,39 +123,39 @@
     }
 
     async function loadSelidaXristi(rolos, username) {
-      try {
-        const response = await fetch(`${rolos}.html`);
-        if (!response.ok) {
-            throw new Error(`Failed to load ${rolos}.html`);
-        }
-        const html = await response.text();
-        const mainContent = document.getElementById('main-content');
-        mainContent.innerHTML = html;
-
-        // Find and remove any existing dynamically loaded scripts to prevent duplicates
-        const existingScript = document.body.querySelector('#dynamic-script');
-        if (existingScript) {
-            existingScript.remove();
-        }
-
-        const scriptElement = mainContent.querySelector('script');
-        if (scriptElement) {
-            const newScript = document.createElement('script');
-            newScript.textContent = scriptElement.textContent;
-            newScript.id = 'dynamic-script'; // Add an ID to easily find and remove it later
-            document.body.appendChild(newScript);
-        }
-
-        const span = document.getElementById('usernameDisplay');
-        if (span) {
-          span.textContent = username.charAt(0).toUpperCase() + username.slice(1);
-        }
-
-        updateHeaderButtons();
-      } catch (e) {
-        document.getElementById('main-content').innerHTML = `<p>Error loading ${rolos} page: ${e.message}</p>`;
-      }
+  try {
+    const response = await fetch(`${rolos}.html`);
+    if (!response.ok) {
+      throw new Error(`Failed to load ${rolos}.html`);
     }
+    const html = await response.text();
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = html;
+
+    // Find and execute the script from the loaded HTML
+    const scriptElement = mainContent.querySelector('script');
+    if (scriptElement) {
+        const newScript = document.createElement('script');
+        newScript.textContent = scriptElement.textContent;
+        document.body.appendChild(newScript);
+    }
+
+    // Call the correct initialization function based on the role
+    if (rolos === 'foititis') {
+        if (typeof initFoititisPage === 'function') {
+            initFoititisPage(username);
+        }
+    } else if (rolos === 'didaskon') {
+        if (typeof initDidaskonPage === 'function') {
+            initDidaskonPage(username);
+        }
+    }
+    updateHeaderButtons();
+  } catch (e) {
+    document.getElementById('main-content').innerHTML = `<p>Error loading ${rolos} page: ${e.message}</p>`;
+    console.error(e);
+  }
+}
 </script>
 </body>
 </html>

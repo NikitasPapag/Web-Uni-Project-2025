@@ -4,6 +4,7 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const multer = require('multer');
 const fs = require('fs');
+const bcrypt = require('bcrypt'); 
 
 const app = express();
 const PORT = 3000;
@@ -53,20 +54,221 @@ app.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Όνομα χρήστη και κωδικός απαιτούνται.' });
 
-  const query = 'SELECT id, username, rolos FROM xristes WHERE username = ? AND password = ?';
-  connection.query(query, [username, password], (err, results) => {
+  const query = 'SELECT id, username, rolos, password FROM xristes WHERE username = ?';
+  connection.query(query, [username], (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ error: 'Σφάλμα βάσης δεδομένων.' });
     }
     if (results.length === 0) return res.status(401).json({ error: 'Λανθασμένο όνομα χρήστη ή κωδικός.' });
+    
     const user = results[0];
-    res.json({ id: user.id, username: user.username, rolos: user.rolos });
+    
+    // ΧΡΗΣΗ ΤΟΥ BCrypt: Επαλήθευση του κωδικού χρήστη με τον κρυπτογραφημένο κωδικό της βάσης
+    bcrypt.compare(password, user.password, (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Σφάλμα κατά την επαλήθευση του κωδικού.' });
+      }
+      if (!result) return res.status(401).json({ error: 'Λανθασμένο όνομα χρήστη ή κωδικός.' });
+      
+      // If result is true, the password is correct
+      res.json({ id: user.id, username: user.username, rolos: user.rolos });
+    });
   });
 });
 
+
 /* ---------------------------
-   ΓΡΑΜΜΑΤΕΙΑ Endpoints
+   ENDPOINTS Πίνακα Διδάσκοντα
+   --------------------------- */
+
+// 1. Get themata of didaskon
+app.get(`${API_BASE}/didaskon/:id/themata`, (req, res) => {
+const { id } = req.params;
+const q = 'SELECT * FROM themata WHERE id_didaskonta = ? ORDER BY id DESC';
+connection.query(q, [id], (err, results) => {
+if (err) return res.status(500).json({ error: 'DB error' });
+res.json(results);
+});
+});
+
+// Create thema
+app.post(`${API_BASE}/themata`, (req, res) => {
+const { titlos, perigrafi, id_didaskonta } = req.body;
+if (!titlos || !id_didaskonta) return res.status(400).json({ error: 'Λείπουν πεδία' });
+const q = 'INSERT INTO themata (titlos, perigrafi, id_didaskonta) VALUES (?, ?, ?)';
+connection.query(q, [titlos, perigrafi || null, id_didaskonta], (err, result) => {
+if (err) return res.status(500).json({ error: 'DB error' });
+res.json({ success: true, id: result.insertId });
+});
+});
+
+
+// Update thema
+app.put(`${API_BASE}/themata/:id`, (req, res) => {
+const { id } = req.params;
+const { titlos, perigrafi } = req.body;
+const q = 'UPDATE themata SET titlos = ?, perigrafi = ? WHERE id = ?';
+connection.query(q, [titlos, perigrafi, id], (err) => {
+if (err) return res.status(500).json({ error: 'DB error' });
+res.json({ success: true });
+});
+});
+
+
+// Delete thema
+app.delete(`${API_BASE}/themata/:id`, (req, res) => {
+const { id } = req.params;
+const q = 'DELETE FROM themata WHERE id = ?';
+connection.query(q, [id], (err) => {
+if (err) return res.status(500).json({ error: 'DB error' });
+res.json({ success: true });
+});
+});
+
+
+// 2. Aitiseis (requests for assignment)
+app.get(`${API_BASE}/didaskon/:id/aitiseis`, (req, res) => {
+const { id } = req.params;
+const q = `
+SELECT d.id AS id_diplomatikis, d.id_thematos, t.titlos,
+x.onoma, x.epitheto, x.email
+FROM diplomatikes d
+JOIN themata t ON d.id_thematos = t.id
+JOIN xristes x ON d.id_foititi = x.id
+WHERE t.id_didaskonta = ? AND d.katastasi = 'ypo_anathesi'
+`;
+connection.query(q, [id], (err, results) => {
+if (err) return res.status(500).json({ error: 'DB error' });
+res.json(results);
+});
+});
+
+
+app.post(`${API_BASE}/diplomatikes/:id/apofasi`, (req, res) => {
+const { id } = req.params;
+const { apofasi } = req.body;
+if (apofasi === 'apodoxi') {
+const q = 'UPDATE diplomatikes SET katastasi = "energi" WHERE id = ?';
+connection.query(q, [id], (err) => {
+if (err) return res.status(500).json({ error: 'DB error' });
+res.json({ success: true });
+});
+} else if (apofasi === 'aporripsi') {
+const q = 'DELETE FROM diplomatikes WHERE id = ?';
+connection.query(q, [id], (err) => {
+if (err) return res.status(500).json({ error: 'DB error' });
+res.json({ success: true });
+});
+} else {
+res.status(400).json({ error: 'Μη έγκυρη απόφαση' });
+}
+});
+
+
+// 3. Proskliseis for didaskon
+app.get(`${API_BASE}/didaskon/:id/proskliseis`, (req, res) => {
+const { id } = req.params;
+const q = `
+SELECT p.id AS id_prosklisis, p.katastasi, t.titlos,
+xf.onoma AS onoma_foititi, xf.epitheto AS epitheto_foititi, xf.email AS email_foititi
+FROM proskliseis p
+JOIN diplomatikes d ON p.id_diplomatikis = d.id
+JOIN themata t ON d.id_thematos = t.id
+JOIN xristes xf ON d.id_foititi = xf.id
+WHERE p.id_didaskonta = ?
+ORDER BY p.id DESC
+`;
+connection.query(q, [id], (err, results) => {
+if (err) return res.status(500).json({ error: 'DB error' });
+res.json(results);
+});
+});
+
+
+app.post(`${API_BASE}/proskliseis/:id/apantisi`, (req, res) => {
+const { id } = req.params;
+const { katastasi } = req.body;
+const q = 'UPDATE proskliseis SET katastasi = ?, hmerominia_apantisis = NOW() WHERE id = ?';
+connection.query(q, [katastasi, id], (err) => {
+if (err) return res.status(500).json({ error: 'DB error' });
+res.json({ success: true });
+});
+});
+
+
+// 4. Diplomatikes under supervision
+app.get(`${API_BASE}/didaskon/:id/diplwmatikes`, (req, res) => {
+const { id } = req.params;
+const q = `
+SELECT d.id, d.katastasi, d.hmerominia_anathesis, d.final_bathmos,
+d.praktiko_link, d.nimertis_link,
+t.titlos, x.onoma, x.epitheto, x.email
+FROM diplomatikes d
+JOIN themata t ON d.id_thematos = t.id
+JOIN xristes x ON d.id_foititi = x.id
+WHERE t.id_didaskonta = ?
+ORDER BY d.id DESC
+`;
+connection.query(q, [id], (err, results) => {
+if (err) return res.status(500).json({ error: 'DB error' });
+res.json(results);
+});
+});
+
+
+// 5. Epitropes where didaskon participates
+app.get(`${API_BASE}/didaskon/:id/epitropes`, (req, res) => {
+const { id } = req.params;
+const q = `
+SELECT d.id AS id_diplomatikis, d.katastasi, t.titlos,
+xf.onoma, xf.epitheto, xf.email
+FROM trimeloys tr
+JOIN diplomatikes d ON tr.id_diplomatikis = d.id
+JOIN themata t ON d.id_thematos = t.id
+JOIN xristes xf ON d.id_foititi = xf.id
+WHERE tr.id_melous = ?
+ORDER BY d.id DESC
+`;
+connection.query(q, [id], (err, results) => {
+if (err) return res.status(500).json({ error: 'DB error' });
+res.json(results);
+});
+});
+
+
+// Submit vathmos + kritiki
+app.post(`${API_BASE}/diplomatikes/:id/vathmos`, (req, res) => {
+const { id } = req.params;
+const { id_didaskonta, bathmos, kritiki } = req.body;
+
+
+// Βρες το αντίστοιχο μέλος από trimeloys
+const qFind = 'SELECT id FROM trimeloys WHERE id_diplomatikis = ? AND id_melous = ? LIMIT 1';
+connection.query(qFind, [id, id_didaskonta], (err, rows) => {
+if (err) return res.status(500).json({ error: 'DB error' });
+if (!rows.length) return res.status(404).json({ error: 'Δεν βρέθηκε συμμετοχή στην επιτροπή' });
+
+
+const id_trimelous = rows[0].id;
+const qIns = `
+INSERT INTO kritiki_aksiologisis (id_trimelous, analytiki_kritiki, analytiki_vathmologia)
+VALUES (?, ?, ?)
+ON DUPLICATE KEY UPDATE analytiki_kritiki = VALUES(analytiki_kritiki), analytiki_vathmologia = VALUES(analytiki_vathmologia)
+`;
+connection.query(qIns, [id_trimelous, kritiki || '', bathmos], (err2) => {
+if (err2) return res.status(500).json({ error: 'DB error saving grade' });
+res.json({ success: true });
+});
+});
+});
+
+
+app.get(`${API_BASE}/status`, (req, res) => res.json({ ok: true }));
+
+/* ---------------------------
+   ENDPOINTS Πίνακα Γραμματείας
    --------------------------- */
 
 /* 1) List diplomas (for γραμματεία page) */
@@ -90,7 +292,8 @@ app.get(`${API_BASE}/grammateia/diplwmatikes`, (req, res) => {
   });
 });
 
-/* 2) Create user (γραμματεία) */
+
+/* 2) Δημιουργία Χρήστη (από γραμματεία) */
 app.post(`${API_BASE}/grammateia/users`, (req, res) => {
   const { onoma, epitheto, email, password, rolos, am } = req.body;
 
@@ -103,34 +306,42 @@ app.post(`${API_BASE}/grammateia/users`, (req, res) => {
 
   const username = email.split('@')[0];
 
-  const insertUser = 'INSERT INTO xristes (onoma, epitheto, email, password, rolos, username) VALUES (?, ?, ?, ?, ?, ?)';
-  connection.query(insertUser, [onoma, epitheto, email, password, rolos, username], (err, result) => {
+  // ΧΡΗΣΗ ΤΟΥ BCrypt: Κρυπτογράφηση του κωδικού πριν την αποθήκευση
+  bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) {
       console.error(err);
-      return res.status(500).json({ error: 'Σφάλμα καταχώρησης χρήστη.' });
+      return res.status(500).json({ error: 'Σφάλμα κατά την κρυπτογράφηση του κωδικού.' });
     }
-    const id = result.insertId;
-    if (rolos === 'foititis') {
-      const insertF = 'INSERT INTO foititis (id, AM) VALUES (?, ?)';
-      connection.query(insertF, [id, am || null], (err2) => {
-        if (err2) {
-          console.error(err2);
-          return res.status(500).json({ error: 'Σφάλμα καταχώρησης φοιτητή.' });
-        }
+
+    const insertUser = 'INSERT INTO xristes (onoma, epitheto, email, password, rolos, username) VALUES (?, ?, ?, ?, ?, ?)';
+    connection.query(insertUser, [onoma, epitheto, email, hashedPassword, rolos, username], (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Σφάλμα καταχώρησης χρήστη.' });
+      }
+      const id = result.insertId;
+      if (rolos === 'foititis') {
+        const insertF = 'INSERT INTO foititis (id, AM) VALUES (?, ?)';
+        connection.query(insertF, [id, am || null], (err2) => {
+          if (err2) {
+            console.error(err2);
+            return res.status(500).json({ error: 'Σφάλμα καταχώρησης φοιτητή.' });
+          }
+          return res.json({ success: true, id: id });
+        });
+      } else if (rolos === 'didaskon') {
+        const insertD = 'INSERT INTO didaskon (id) VALUES (?)';
+        connection.query(insertD, [id], (err2) => {
+          if (err2) {
+            console.error(err2);
+            return res.status(500).json({ error: 'Σφάλμα καταχώρησης διδάσκοντα.' });
+          }
+          return res.json({ success: true, id: id });
+        });
+      } else {
         return res.json({ success: true, id: id });
-      });
-    } else if (rolos === 'didaskon') {
-      const insertD = 'INSERT INTO didaskon (id) VALUES (?)';
-      connection.query(insertD, [id], (err2) => {
-        if (err2) {
-          console.error(err2);
-          return res.status(500).json({ error: 'Σφάλμα καταχώρησης διδάσκοντα.' });
-        }
-        return res.json({ success: true, id: id });
-      });
-    } else {
-      return res.json({ success: true, id: id });
-    }
+      }
+    });
   });
 });
 
@@ -189,7 +400,7 @@ app.get(`${API_BASE}/grammateia/praktiko/:id`, (req, res) => {
 });
 
 /* ---------------------------
-   ΦΟΙΤΗΤΗΣ Endpoints
+   ENDPOINTS Πίνακα Φοιτητή
    --------------------------- */
 
 /* THEMATA: list & single */
@@ -433,198 +644,6 @@ app.get(`${API_BASE}/diplomatiki/:id/logs`, (req, res) => {
   });
 });
 
-/* ---------------------------
-ΔΙΔΑΣΚΩΝ Endpoints
---------------------------- */
-
-// 1. Get themata of didaskon
-app.get(`${API_BASE}/didaskon/:id/themata`, (req, res) => {
-const { id } = req.params;
-const q = 'SELECT * FROM themata WHERE id_didaskonta = ? ORDER BY id DESC';
-connection.query(q, [id], (err, results) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json(results);
-});
-});
-
-// Create thema
-app.post(`${API_BASE}/themata`, (req, res) => {
-const { titlos, perigrafi, id_didaskonta } = req.body;
-if (!titlos || !id_didaskonta) return res.status(400).json({ error: 'Λείπουν πεδία' });
-const q = 'INSERT INTO themata (titlos, perigrafi, id_didaskonta) VALUES (?, ?, ?)';
-connection.query(q, [titlos, perigrafi || null, id_didaskonta], (err, result) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json({ success: true, id: result.insertId });
-});
-});
-
-
-// Update thema
-app.put(`${API_BASE}/themata/:id`, (req, res) => {
-const { id } = req.params;
-const { titlos, perigrafi } = req.body;
-const q = 'UPDATE themata SET titlos = ?, perigrafi = ? WHERE id = ?';
-connection.query(q, [titlos, perigrafi, id], (err) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json({ success: true });
-});
-});
-
-
-// Delete thema
-app.delete(`${API_BASE}/themata/:id`, (req, res) => {
-const { id } = req.params;
-const q = 'DELETE FROM themata WHERE id = ?';
-connection.query(q, [id], (err) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json({ success: true });
-});
-});
-
-
-// 2. Aitiseis (requests for assignment)
-app.get(`${API_BASE}/didaskon/:id/aitiseis`, (req, res) => {
-const { id } = req.params;
-const q = `
-SELECT d.id AS id_diplomatikis, d.id_thematos, t.titlos,
-x.onoma, x.epitheto, x.email
-FROM diplomatikes d
-JOIN themata t ON d.id_thematos = t.id
-JOIN xristes x ON d.id_foititi = x.id
-WHERE t.id_didaskonta = ? AND d.katastasi = 'ypo_anathesi'
-`;
-connection.query(q, [id], (err, results) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json(results);
-});
-});
-
-
-app.post(`${API_BASE}/diplomatikes/:id/apofasi`, (req, res) => {
-const { id } = req.params;
-const { apofasi } = req.body;
-if (apofasi === 'apodoxi') {
-const q = 'UPDATE diplomatikes SET katastasi = "energi" WHERE id = ?';
-connection.query(q, [id], (err) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json({ success: true });
-});
-} else if (apofasi === 'aporripsi') {
-const q = 'DELETE FROM diplomatikes WHERE id = ?';
-connection.query(q, [id], (err) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json({ success: true });
-});
-} else {
-res.status(400).json({ error: 'Μη έγκυρη απόφαση' });
-}
-});
-
-
-// 3. Proskliseis for didaskon
-app.get(`${API_BASE}/didaskon/:id/proskliseis`, (req, res) => {
-const { id } = req.params;
-const q = `
-SELECT p.id AS id_prosklisis, p.katastasi, t.titlos,
-xf.onoma AS onoma_foititi, xf.epitheto AS epitheto_foititi, xf.email AS email_foititi
-FROM proskliseis p
-JOIN diplomatikes d ON p.id_diplomatikis = d.id
-JOIN themata t ON d.id_thematos = t.id
-JOIN xristes xf ON d.id_foititi = xf.id
-WHERE p.id_didaskonta = ?
-ORDER BY p.id DESC
-`;
-connection.query(q, [id], (err, results) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json(results);
-});
-});
-
-
-app.post(`${API_BASE}/proskliseis/:id/apantisi`, (req, res) => {
-const { id } = req.params;
-const { katastasi } = req.body;
-const q = 'UPDATE proskliseis SET katastasi = ?, hmerominia_apantisis = NOW() WHERE id = ?';
-connection.query(q, [katastasi, id], (err) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json({ success: true });
-});
-});
-
-
-// 4. Diplomatikes under supervision
-app.get(`${API_BASE}/didaskon/:id/diplwmatikes`, (req, res) => {
-const { id } = req.params;
-const q = `
-SELECT d.id, d.katastasi, d.hmerominia_anathesis, d.final_bathmos,
-d.praktiko_link, d.nimertis_link,
-t.titlos, x.onoma, x.epitheto, x.email
-FROM diplomatikes d
-JOIN themata t ON d.id_thematos = t.id
-JOIN xristes x ON d.id_foititi = x.id
-WHERE t.id_didaskonta = ?
-ORDER BY d.id DESC
-`;
-connection.query(q, [id], (err, results) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json(results);
-});
-});
-
-
-// 5. Epitropes where didaskon participates
-app.get(`${API_BASE}/didaskon/:id/epitropes`, (req, res) => {
-const { id } = req.params;
-const q = `
-SELECT d.id AS id_diplomatikis, d.katastasi, t.titlos,
-xf.onoma, xf.epitheto, xf.email
-FROM trimeloys tr
-JOIN diplomatikes d ON tr.id_diplomatikis = d.id
-JOIN themata t ON d.id_thematos = t.id
-JOIN xristes xf ON d.id_foititi = xf.id
-WHERE tr.id_melous = ?
-ORDER BY d.id DESC
-`;
-connection.query(q, [id], (err, results) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json(results);
-});
-});
-
-
-// Submit vathmos + kritiki
-app.post(`${API_BASE}/diplomatikes/:id/vathmos`, (req, res) => {
-const { id } = req.params;
-const { id_didaskonta, bathmos, kritiki } = req.body;
-
-
-// Βρες το αντίστοιχο μέλος από trimeloys
-const qFind = 'SELECT id FROM trimeloys WHERE id_diplomatikis = ? AND id_melous = ? LIMIT 1';
-connection.query(qFind, [id, id_didaskonta], (err, rows) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-if (!rows.length) return res.status(404).json({ error: 'Δεν βρέθηκε συμμετοχή στην επιτροπή' });
-
-
-const id_trimelous = rows[0].id;
-const qIns = `
-INSERT INTO kritiki_aksiologisis (id_trimelous, analytiki_kritiki, analytiki_vathmologia)
-VALUES (?, ?, ?)
-ON DUPLICATE KEY UPDATE analytiki_kritiki = VALUES(analytiki_kritiki), analytiki_vathmologia = VALUES(analytiki_vathmologia)
-`;
-connection.query(qIns, [id_trimelous, kritiki || '', bathmos], (err2) => {
-if (err2) return res.status(500).json({ error: 'DB error saving grade' });
-res.json({ success: true });
-});
-});
-});
-
-
-app.get(`${API_BASE}/status`, (req, res) => res.json({ ok: true }));
-
-/* ---------------------------
-   Start server
-   --------------------------- */
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
- 

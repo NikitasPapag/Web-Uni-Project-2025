@@ -319,15 +319,17 @@
       } catch (e) { alert(e.message); }
     }
 
-    // Events
-    document.getElementById('btnThemata').onclick = showThemata;
-    document.getElementById('btnAitiseis').onclick = showAitiseis;
-    document.getElementById('btnProskliseis').onclick = showProskliseis;
-    document.getElementById('btnDiplomatikes').onclick = showDiplomatikes;
-    document.getElementById('btnEpitropes').onclick = showEpitropes;
-
-    // Default
-    showThemata();
+    function initDidaskonPage(username) {
+        document.getElementById('btnThemata').onclick = showThemata;
+        document.getElementById('btnAitiseis').onclick = showAitiseis;
+        document.getElementById('btnProskliseis').onclick = showProskliseis;
+        document.getElementById('btnDiplomatikes').onclick = showDiplomatikes;
+        document.getElementById('btnEpitropes').onclick = showEpitropes;
+        const span = document.getElementById('usernameDisplay');
+        if (span) {
+            span.textContent = username.charAt(0).toUpperCase() + username.slice(1);
+        }
+    }
   </script>
 </body>
 </html>

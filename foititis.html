@@ -481,9 +481,9 @@
       }
     }
 
-    // Wire up buttons
-    function init() {
-      const btnListThemata = document.getElementById('btnListThemata');
+    // New function to be called from index.html
+    function initFoititisPage(username) {
+        const btnListThemata = document.getElementById('btnListThemata');
       if (btnListThemata) btnListThemata.addEventListener('click', showThemataList);
       const btnMyDiplomatiki = document.getElementById('btnMyDiplomatiki');
       if (btnMyDiplomatiki) btnMyDiplomatiki.addEventListener('click', showMyDiplomatiki);
@@ -491,6 +491,10 @@
       if (btnEditProfile) btnEditProfile.addEventListener('click', showEditProfile);
       const btnManageDiplomatiki = document.getElementById('btnManageDiplomatiki');
       if (btnManageDiplomatiki) btnManageDiplomatiki.addEventListener('click', showManageDiplomatiki);
+        const span = document.getElementById('usernameDisplay');
+        if (span) {
+            span.textContent = username.charAt(0).toUpperCase() + username.slice(1);
+        }
     }
 </script>
 </body>
