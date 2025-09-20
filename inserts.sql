@@ -165,7 +165,7 @@ INSERT INTO diplomatikes (id_thematos, id_foititi, katastasi, hmerominia_anathes
 ((SELECT id FROM themata WHERE titlos = 'Internet of Things (IoT) στην Έξυπνη Πόλη'), @loukia_l_id, 'peratomeni', '2023-09-05', 'http://example.com/praktiko_loukia_l.pdf', 'http://nimertis.gr/thesis/loukia_l', 9.0, '2024-07-05', @filippou_id); -- d10
 
 -- Διπλωματικές με Κατάσταση: 'akyromeni'
-INSERT INTO diplomatikes (id_thematos, id_foititi, katastasi, hmerominia_anathesis, hmerominia_akyrwshs, arithmos_protokollou_akyrwshs, etos_genikis_syneleusis_akyrwshs, logos_akyrwshs, id_grammateias_pou_akyrose) VALUES
+INSERT INTO diplomatikes (id_thematos, id_foititi, katastasi, hmerominia_anathesis, hmerominia_akyrwshs, arithmos_protokollou_akyrwshs, etos_genikis_syneleusis_akyrwshs, logos_akyrwshs, id_grammateias_pou_akyrwse) VALUES
 ((SELECT id FROM themata WHERE titlos = 'Ανάλυση Δεδομένων με Python και Pandas'), @michalis_m_id, 'akyromeni', '2024-01-10', '2024-06-20', 'ΓΣ123/2024', 2024, 'Κατόπιν αίτησης φοιτητή', @karatza_id); -- d11
 
 -- Διπλωματικές με Κατάσταση: 'ypo_anathesi' (θέμα χωρίς ανάθεση σε φοιτητή, αλλά για φοιτητή που ψάχνει)
@@ -224,7 +224,7 @@ INSERT INTO trimeloys (id_diplomatikis, id_melous, rolos, epidosi) VALUES
 
 
 -- 8. Εισαγωγή Δεδομένων στον πίνακα anakoinoseis (για διπλωματικές 'Υπό Εξέταση')
-INSERT INTO anakoinoseis (id_diplomatikis, titlos, imerominia_parousiasis, ora_parousiasis, tropo_parousiasis, topo_thea) VALUES
+INSERT INTO anakoinoseis (id_diplomatikis, titlos, imerominia_parousiasis, ora_parousiasis, tropo_parousiasis, topothesia) VALUES
 ((SELECT id FROM diplomatikes WHERE id_foititi = @aikaterini_z_id), 'Παρουσίαση Διπλωματικής: Εικονική Πραγματικότητα', '2025-08-10', '10:00:00', 'di_zosis', 'Αίθουσα Α201'),
 ((SELECT id FROM diplomatikes WHERE id_foititi = @dimitris_th_id), 'Παρουσίαση Διπλωματικής: NLP σε Ελληνικά', '2025-08-12', '11:30:00', 'online', 'https://meet.google.com/xyzabc'),
 ((SELECT id FROM diplomatikes WHERE id_foititi = @ioanna_i_id), 'Παρουσίαση Διπλωματικής: Blockchain Technologies', '2025-08-15', '09:00:00', 'di_zosis', 'Αίθουσα Α202');
@@ -235,3 +235,35 @@ INSERT INTO kritiki_aksiologisis (id_trimelous, analytiki_kritiki, analytiki_vat
 ((SELECT id FROM trimeloys WHERE id_diplomatikis = (SELECT id FROM diplomatikes WHERE id_foititi = @konstantinos_k_id) AND id_melous = @vlachos_id), 'Εξαιρετική υλοποίηση και καλή κατανόηση', 8.5),
 ((SELECT id FROM trimeloys WHERE id_diplomatikis = (SELECT id FROM diplomatikes WHERE id_foititi = @konstantinos_k_id) AND id_melous = @papadakis_id), 'Σαφής παρουσίαση, με μικρές αδυναμίες στη βιβλιογραφία', 8.0),
 ((SELECT id FROM trimeloys WHERE id_diplomatikis = (SELECT id FROM diplomatikes WHERE id_foititi = @konstantinos_k_id) AND id_melous = @stavropoulou_id), 'Πολύ καλή έρευνα, άριστη απόδοση', 9.0);
+
+-- 10. Εισαγωγή Δεδομένων στον πίνακα simioseis
+INSERT INTO simioseis (id_diplomatikis, id_didaskonta, keimeno) VALUES
+((SELECT id FROM diplomatikes WHERE id_foititi = @alexandros_p_id), @papadakis_id, 'Καλή πρόοδος στο React Native project.'),
+((SELECT id FROM diplomatikes WHERE id_foititi = @eleni_v_id), @stavropoulou_id, 'Χρειάζεται περισσότερη βιβλιογραφία.'),
+((SELECT id FROM diplomatikes WHERE id_foititi = @nikolaos_g_id), @lappas_id, 'Να ενισχυθεί το κεφάλαιο ασφάλειας.'),
+((SELECT id FROM diplomatikes WHERE id_foititi = @maria_d_id), @kyriakidou_id, 'Πολύ καλή δουλειά μέχρι τώρα.'),
+((SELECT id FROM diplomatikes WHERE id_foititi = @georgios_e_id), @michalopoulos_id, 'Σαφήνεια στον κώδικα REST API.');
+
+-- 11. Εισαγωγή Δεδομένων στον πίνακα arxeia
+INSERT INTO arxeia (id_diplomatikis, typos, onoma_arxeiou, link) VALUES
+((SELECT id FROM diplomatikes WHERE id_foititi = @alexandros_p_id), 'keimeno', 'react_native_doc.pdf', NULL),
+((SELECT id FROM diplomatikes WHERE id_foititi = @eleni_v_id), 'ypostiriktiko', 'medical_ml_dataset.zip', NULL),
+((SELECT id FROM diplomatikes WHERE id_foititi = @nikolaos_g_id), 'keimeno', 'network_security.pdf', NULL),
+((SELECT id FROM diplomatikes WHERE id_foititi = @maria_d_id), 'link', NULL, 'http://github.com/maria_d/bigdata'),
+((SELECT id FROM diplomatikes WHERE id_foititi = @georgios_e_id), 'keimeno', 'rest_api_doc.pdf', NULL);
+
+-- 12. Εισαγωγή Δεδομένων στον πίνακα proskliseis
+INSERT INTO proskliseis (id_diplomatikis, id_didaskonta, katastasi, hmerominia_apantisis) VALUES
+((SELECT id FROM diplomatikes WHERE id_foititi = @alexandros_p_id), @stavropoulou_id, 'apodexti', '2024-11-18'),
+((SELECT id FROM diplomatikes WHERE id_foititi = @eleni_v_id), @kyriakidou_id, 'apodexti', '2024-11-25'),
+((SELECT id FROM diplomatikes WHERE id_foititi = @nikolaos_g_id), @dimitriadis_id, 'aporrifthi', '2024-11-30'),
+((SELECT id FROM diplomatikes WHERE id_foititi = @maria_d_id), @petridou_id, 'ekremis', NULL),
+((SELECT id FROM diplomatikes WHERE id_foititi = @georgios_e_id), @vlachos_id, 'apodexti', '2024-12-10');
+
+-- 13. Εισαγωγή Δεδομένων στον πίνακα diplomatiki_logs
+INSERT INTO diplomatiki_logs (id_diplomatikis, palia_katastasi, nea_katastasi, hmerominia_allagis) VALUES
+((SELECT id FROM diplomatikes WHERE id_foititi = @alexandros_p_id), 'ypo_anathesi', 'energi', '2024-11-15 10:00:00'),
+((SELECT id FROM diplomatikes WHERE id_foititi = @eleni_v_id), 'ypo_anathesi', 'energi', '2024-11-20 11:00:00'),
+((SELECT id FROM diplomatikes WHERE id_foititi = @nikolaos_g_id), 'ypo_anathesi', 'energi', '2024-11-25 09:30:00'),
+((SELECT id FROM diplomatikes WHERE id_foititi = @maria_d_id), 'ypo_anathesi', 'energi', '2024-12-01 14:00:00'),
+((SELECT id FROM diplomatikes WHERE id_foititi = @georgios_e_id), 'ypo_anathesi', 'energi', '2024-12-05 16:30:00');
