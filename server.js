@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Multer setup for file uploads (store under public/uploads)
+// Multer setup gia anevasma arxeiwn
 const uploadDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -64,7 +64,7 @@ app.post('/login', (req, res) => {
     
     const user = results[0];
     
-    // ΧΡΗΣΗ ΤΟΥ BCrypt: Επαλήθευση του κωδικού χρήστη με τον κρυπτογραφημένο κωδικό της βάσης
+    // xrisi bcrypt gia epalitheusi kwdikou me db
     bcrypt.compare(password, user.password, (err, result) => {
       if (err) {
         console.error(err);
@@ -72,7 +72,7 @@ app.post('/login', (req, res) => {
       }
       if (!result) return res.status(401).json({ error: 'Λανθασμένο όνομα χρήστη ή κωδικός.' });
       
-      // If result is true, the password is correct
+      // If true, o kodikos einai swstos
       res.json({ id: user.id, username: user.username, rolos: user.rolos });
     });
   });
@@ -83,7 +83,7 @@ app.post('/login', (req, res) => {
    ENDPOINTS Πίνακα Διδάσκοντα
    --------------------------- */
 
-// 1. Get themata of didaskon
+// 1. Get themata didaskonta
 app.get(`${API_BASE}/didaskon/:id/themata`, (req, res) => {
 const { id } = req.params;
 const q = 'SELECT * FROM themata WHERE id_didaskonta = ? ORDER BY id DESC';
@@ -128,7 +128,7 @@ res.json({ success: true });
 });
 
 
-// 2. Aitiseis (requests for assignment)
+// 2. Aitiseis diplomatikwn
 app.get(`${API_BASE}/didaskon/:id/aitiseis`, (req, res) => {
 const { id } = req.params;
 const q = `
@@ -145,7 +145,7 @@ res.json(results);
 });
 });
 
-
+  //apofasi gia aitisi
 app.post(`${API_BASE}/diplomatikes/:id/apofasi`, (req, res) => {
 const { id } = req.params;
 const { apofasi } = req.body;
@@ -167,7 +167,7 @@ res.status(400).json({ error: 'Μη έγκυρη απόφαση' });
 });
 
 
-// 3. Proskliseis for didaskon
+// 3. Proskliseis didaskonta
 app.get(`${API_BASE}/didaskon/:id/proskliseis`, (req, res) => {
 const { id } = req.params;
 const q = `
@@ -186,7 +186,7 @@ res.json(results);
 });
 });
 
-
+  //apantisi gia prosklisi
 app.post(`${API_BASE}/proskliseis/:id/apantisi`, (req, res) => {
 const { id } = req.params;
 const { katastasi } = req.body;
@@ -198,7 +198,7 @@ res.json({ success: true });
 });
 
 
-// 4. Diplomatikes under supervision
+// 4. Diplomatikes pou epivlepei o didaskon
 app.get(`${API_BASE}/didaskon/:id/diplwmatikes`, (req, res) => {
 const { id } = req.params;
 const q = `
@@ -218,7 +218,7 @@ res.json(results);
 });
 
 
-// 5. Epitropes where didaskon participates
+// 5. Epitropes pou symmetexei o didaskon
 app.get(`${API_BASE}/didaskon/:id/epitropes`, (req, res) => {
 const { id } = req.params;
 const q = `
@@ -244,7 +244,7 @@ const { id } = req.params;
 const { id_didaskonta, bathmos, kritiki } = req.body;
 
 
-// Βρες το αντίστοιχο μέλος από trimeloys
+// Vriskei to antistoixo melos apo trimeloys
 const qFind = 'SELECT id FROM trimeloys WHERE id_diplomatikis = ? AND id_melous = ? LIMIT 1';
 connection.query(qFind, [id, id_didaskonta], (err, rows) => {
 if (err) return res.status(500).json({ error: 'DB error' });
@@ -271,7 +271,7 @@ app.get(`${API_BASE}/status`, (req, res) => res.json({ ok: true }));
    ENDPOINTS Πίνακα Γραμματείας
    --------------------------- */
 
-/* 1) List diplomas (for γραμματεία page) */
+/* 1) Lista diplomatikwn gia grammateia */
 app.get(`${API_BASE}/grammateia/diplwmatikes`, (req, res) => {
   const query = `
     SELECT d.id, t.titlos, d.katastasi,
@@ -293,7 +293,7 @@ app.get(`${API_BASE}/grammateia/diplwmatikes`, (req, res) => {
 });
 
 
-/* 2) Δημιουργία Χρήστη (από γραμματεία) */
+/* 2) Dimiourgia xristi apo grammateia */
 app.post(`${API_BASE}/grammateia/users`, (req, res) => {
   const { onoma, epitheto, email, password, rolos, am } = req.body;
 
@@ -306,7 +306,7 @@ app.post(`${API_BASE}/grammateia/users`, (req, res) => {
 
   const username = email.split('@')[0];
 
-  // ΧΡΗΣΗ ΤΟΥ BCrypt: Κρυπτογράφηση του κωδικού πριν την αποθήκευση
+  // xrisi bcrypt gia kryptografisi kwdikou prin tin apothikefsi
   bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) {
       console.error(err);
@@ -345,7 +345,7 @@ app.post(`${API_BASE}/grammateia/users`, (req, res) => {
   });
 });
 
-/* 3) Set exam (γραμματεία) - insert or update anakoinoseis */
+/* 3) orismos exetasis diplomatikis insert or update anakoinoseis */
 app.post('/api/grammateia/orismos_exetasis', (req, res) => {
   const { id_diplomatikis, imerominia, wra, tropos, topothesia } = req.body;
 
@@ -373,7 +373,7 @@ app.post('/api/grammateia/orismos_exetasis', (req, res) => {
   });
 });
 
-/* 4) Cancel diploma - update status and logos_akyrwshs */
+/* 4) akyrwsh diplomatikis - enimerosh katastashs kai logos_akyrwshs */
 app.post(`${API_BASE}/grammateia/akyrosi_diplwmatikis`, (req, res) => {
   const { id_diplomatikis, logos } = req.body;
   if (!id_diplomatikis || !logos) return res.status(400).json({ error: 'ID και λόγος ακύρωσης απαιτούνται.' });
@@ -403,7 +403,7 @@ app.get(`${API_BASE}/grammateia/praktiko/:id`, (req, res) => {
    ENDPOINTS Πίνακα Φοιτητή
    --------------------------- */
 
-/* THEMATA: list & single */
+/* themata lista & single */
 app.get(`${API_BASE}/themata`, (req, res) => {
   const q = 'SELECT id, titlos, perigrafi, arxeio FROM themata ORDER BY id DESC';
   connection.query(q, (err, results) => {
@@ -422,12 +422,12 @@ app.get(`${API_BASE}/themata/:id`, (req, res) => {
   });
 });
 
-/* Assign a theme to a student (create diplomatiki row) */
+/* anathesi thematos se foititi */
 app.post(`${API_BASE}/diplomatikes/anathesi`, (req, res) => {
   const { id_thematos, id_foititi } = req.body;
   if (!id_thematos || !id_foititi) return res.status(400).json({ error: 'Απαιτούνται id_thematos και id_foititi.' });
 
-  // If student already has a diplomatiki, return error
+  // error an o foititis exei idi diplomatiki
   const check = 'SELECT * FROM diplomatikes WHERE id_foititi = ?';
   connection.query(check, [id_foititi], (err, rows) => {
     if (err) return res.status(500).json({ error: 'DB error' });
@@ -444,7 +444,7 @@ app.post(`${API_BASE}/diplomatikes/anathesi`, (req, res) => {
   });
 });
 
-/* Get student's current diplomatiki (by student id) */
+/* Get trexousa diplomatiki foititi (by student id) */
 app.get(`${API_BASE}/diplomatiki/byFoititis/:id`, (req, res) => {
     const { id } = req.params;
     const q = `
@@ -474,7 +474,7 @@ app.get(`${API_BASE}/diplomatiki/byFoititis/:id`, (req, res) => {
   });
 
 
-/* Profile view & update */
+/* provoli kai epeksergasia profil */
 app.get(`${API_BASE}/profil/:id`, (req, res) => {
   const { id } = req.params;
   const q = `
@@ -530,7 +530,7 @@ app.put(`${API_BASE}/profil/:id`, (req, res) => {
   });
 });
 
-/* Trimelis: create invitation & list invitations for a diploma */
+/* dimiourgia prosklisis trimelous kai lista prosklisewn gia diplomatiki */
 app.post(`${API_BASE}/trimelis/prosklisi`, (req, res) => {
   const { id_diplomatikis, id_didaskonta } = req.body;
   if (!id_diplomatikis || !id_didaskonta) return res.status(400).json({ error: 'Απαιτούνται id_diplomatikis και id_didaskonta.' });
@@ -546,7 +546,7 @@ app.post(`${API_BASE}/trimelis/prosklisi`, (req, res) => {
 });
 
 app.get(`${API_BASE}/trimelis/proskliseis/:id`, (req, res) => {
-  const { id } = req.params; // id of diplomatiki
+  const { id } = req.params; // id diplomatikis
   const q = `
     SELECT p.*, x.onoma, x.epitheto, p.katastasi AS katastasi_prosklisis
     FROM proskliseis p
@@ -560,9 +560,8 @@ app.get(`${API_BASE}/trimelis/proskliseis/:id`, (req, res) => {
   });
 });
 
-/* Upload draft (file) - form contains id_diplomatikis and optional link field */
+/* anevasma arxeiou - to form periexei id_diplomatikis kai proairetika pedio gia link */
 app.post(`${API_BASE}/diplomatiki/upload_draft`, upload.single('arxeio'), (req, res) => {
-  // multer will parse file and text fields
   const id_diplomatikis = req.body.id_diplomatikis || req.body.id_diplomatikis;
   const link = req.body.link || null;
   if (!id_diplomatikis) return res.status(400).json({ error: 'id_diplomatikis required' });
@@ -579,7 +578,7 @@ app.post(`${API_BASE}/diplomatiki/upload_draft`, upload.single('arxeio'), (req, 
   });
 });
 
-/* Create presentation announcement (anakoinwsi) from student screen */
+/* dimiourgia anakoinwshs gia parousiasi apo foititi */
 app.post(`${API_BASE}/diplomatiki/anakoinwsi`, (req, res) => {
   const { id_diplomatikis, imerominia_parousiasis, ora_parousiasis, tropo_parousiasis, topothesia } = req.body;
   if (!id_diplomatikis || !imerominia_parousiasis || !ora_parousiasis || !tropo_parousiasis || !topothesia) {
@@ -602,10 +601,9 @@ app.post(`${API_BASE}/diplomatiki/anakoinwsi`, (req, res) => {
   });
 });
 
-/* Get praktiko HTML (student view) */
+/* Get praktiko link*/
 app.get(`${API_BASE}/diplomatiki/:id/praktiko`, (req, res) => {
   const { id } = req.params;
-  // Assume praktiko_html column exists or we read from stored file
   const q = 'SELECT praktiko_link, praktiko_html FROM diplomatikes WHERE id = ?';
   connection.query(q, [id], (err, results) => {
     if (err) return res.status(500).json({ error: 'DB error' });
@@ -628,10 +626,9 @@ app.post(`${API_BASE}/diplomatiki/nimertis`, (req, res) => {
   });
 });
 
-/* Get logs / history for diplomatiki (simplified) */
+/* Get logs gia diplomatiki */
 app.get(`${API_BASE}/diplomatiki/:id/logs`, (req, res) => {
   const { id } = req.params;
-  // If you have a table for logs, return real logs. For now return proskliseis/status changes from proskliseis or simioseis
   const q = `
     SELECT 'prosklisi' AS typ, p.id, p.katastasi, p.imerominia_prosklisis AS imerominia
     FROM proskliseis p
@@ -641,6 +638,59 @@ app.get(`${API_BASE}/diplomatiki/:id/logs`, (req, res) => {
   connection.query(q, [id], (err, results) => {
     if (err) return res.status(500).json({ error: 'DB error' });
     return res.json(results || []);
+  });
+});
+
+
+/* ---------------------------
+        Δημόσιο ENDPOINT
+   --------------------------- */
+
+app.get('/api/public/anakoinoseis', (req, res) => {
+  const { start_date, end_date, format } = req.query;
+
+  let query = 'SELECT * FROM anakoinoseis';
+  const params = [];
+
+  // Εφαρμογή φίλτρου ημερομηνιών, αν έχουν δοθεί
+  if (start_date && end_date) {
+    query += ' WHERE imerominia_parousiasis BETWEEN ? AND ?';
+    params.push(start_date, end_date);
+  } else if (start_date) {
+    query += ' WHERE imerominia_parousiasis >= ?';
+    params.push(start_date);
+  } else if (end_date) {
+    query += ' WHERE imerominia_parousiasis <= ?';
+    params.push(end_date);
+  }
+
+  query += ' ORDER BY imerominia_parousiasis ASC';
+
+  connection.query(query, params, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'DB error fetching announcements.' });
+    }
+
+    // Διαχείριση της μορφής εξόδου
+    if (format && format.toLowerCase() === 'xml') {
+      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<anakoinoseis>\n';
+      results.forEach(row => {
+        xml += '  <anakoinosi>\n';
+        for (const key in row) {
+          if (row.hasOwnProperty(key)) {
+            xml += `    <${key}>${row[key]}</${key}>\n`;
+          }
+        }
+        xml += '  </anakoinosi>\n';
+      });
+      xml += '</anakoinoseis>';
+      res.set('Content-Type', 'text/xml');
+      res.send(xml);
+    } else {
+      // Προεπιλογή: JSON
+      res.json(results);
+    }
   });
 });
 
