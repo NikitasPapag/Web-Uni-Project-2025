@@ -4,33 +4,11 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Πίνακας Διδάσκοντα</title>
-  <style>
-    :root { --p:#059669; --p2:#10b981; --red:#dc2626; }
-    body { font-family: system-ui, sans-serif; background:#f9fafb; margin:0; }
-    main { max-width:1000px; margin:20px auto; padding:0 12px; }
-    .bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
-    button { padding:8px 12px; border:0; border-radius:8px; cursor:pointer; background:var(--p); color:#fff; }
-    button.alt { background:var(--p2); }
-    button.danger { background:var(--red); }
-    section { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin-bottom:16px; }
-    section h2 { margin:0 0 10px; color:#065f46; }
-    section h3 { margin:0 0 6px; }
-    label { display:block; font-size:14px; margin-top:8px; }
-    input[type="text"], input[type="number"], textarea {
-      width:100%; padding:8px; border:1px solid #d1d5db; border-radius:8px; background:#fff;
-    }
-    textarea { min-height:100px; }
-    .muted { color:#6b7280; font-size:13px; }
-    .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:8px; }
-    .row > * { flex: 1 1 auto; }
-    .kapsoula { display:inline-block; padding:2px 8px; border-radius:9999px; background:#ecfdf5; color:#065f46; font-size:12px; }
-    a { color:#047857; text-decoration:none; }
-    a:hover { text-decoration:underline; }
-  </style>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
-<body>
+<body class="body.rolos">  
   <header>
-  <h1>Καλώς ήρθατε <span id="who"></span> !</h1>
+  <h1>Καλώς ήρθατε <span id="who"></span> ! <br> Χρησιμοποιήστε τα κουμπιά για να περιηγηθείτε. </h1>
   </header>
 
   <main>
@@ -56,7 +34,6 @@
           content.innerHTML = `<section>Δεν είστε συνδεδεμένος/η ως Διδάσκων. Παρακαλώ κάντε είσοδο.</section>`;
       } else {
           document.getElementById('who').textContent = `${username}`;
-          showThemata();
       }
 
     async function apiFetch(url, opts = {}) {

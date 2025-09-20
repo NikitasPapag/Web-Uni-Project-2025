@@ -4,30 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Πίνακας Φοιτητή</title>
-  <style>
-    /* mikra stylakia gia anagnwsimotita */
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background:#f7f7f9; color:#222; }
-    header { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; background:#fff; border-bottom:1px solid #eaeaea; position:sticky; top:0; }
-    main { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
-    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
-    .actions button { padding:10px 14px; border:1px solid #ddd; background:#fff; border-radius:10px; cursor:pointer; }
-    .card { background:#fff; border:1px solid #eee; border-radius:12px; padding:16px; margin: 14px 0; }
-    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:12px; }
-    h1,h2,h3 { margin: 8px 0 10px; }
-    label { display:block; margin: 8px 0 4px; }
-    input, select, textarea { width:100%; padding:8px; border:1px solid #ddd; border-radius:8px; }
-    .muted { color:#666; }
-    .row { display:flex; gap:10px; flex-wrap:wrap; }
-    .row > * { flex:1; min-width: 220px; }
-    .pill { display:inline-block; padding:4px 8px; border-radius:999px; border:1px solid #ddd; background:#fafafa; margin-right:6px; }
-    .sep { height:1px; background:#eee; margin:16px 0; }
-    .error { color:#b00020; }
-    .ok { color:#0b7a0b; }
-  </style>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
-<body>
+<body class="body.rolos">
   <header>
-    <h1>Καλώς ήρθατε <span id="helloUser"></span> !</h1>
+    <h1>Καλώς ήρθατε <span id="helloUser"></span> ! <br> Χρησιμοποιήστε τα κουμπιά για να περιηγηθείτε.</h1>
   </header>
 
   <main>
@@ -68,7 +49,6 @@
       // Arxikopoihsh selidas kai provoli username
       const usernameDisplay = document.getElementById('usernameDisplay');
       if (usernameDisplay) usernameDisplay.textContent = username;
-      init();
     }
     
     // Ypologizei meres apo imerominia (YYYY-MM-DD)
@@ -205,22 +185,22 @@
           <div class="card">
             <h2>Επεξεργασία Προφίλ</h2>
             <div class="row">
-              <div><label>Όνομα</label><input id="pf_onoma" value="${p.onoma || ''}" /></div>
-              <div><label>Επώνυμο</label><input id="pf_epitheto" value="${p.epitheto || ''}" /></div>
+              <div><label>Όνομα</label><input type="text" id="pf_onoma" value="${p.onoma || ''}" /></div>
+              <div><label>Επώνυμο</label><input type="text" id="pf_epitheto" value="${p.epitheto || ''}" /></div>
             </div>
             <div class="row">
-              <div><label>Email Επικοινωνίας</label><input id="pf_email" value="${p.email || ''}" /></div>
-              <div><label>Κινητό</label><input id="pf_kinhto" value="${p.tilefono_kinhto || ''}" /></div>
+              <div><label>Email Επικοινωνίας</label><input type="email" id="pf_email" value="${p.email || ''}" /></div>
+              <div><label>Κινητό</label><input type="text" id="pf_kinhto" value="${p.tilefono_kinhto || ''}" /></div>
             </div>
             <div class="row">
-              <div><label>Σταθερό</label><input id="pf_stathero" value="${p.tilefono_stathero || ''}" /></div>
-              <div><label>Α.Μ.</label><input id="pf_am" value="${p.AM || ''}" /></div>
+              <div><label>Σταθερό</label><input type="text" id="pf_stathero" value="${p.tilefono_stathero || ''}" /></div>
+              <div><label>Α.Μ.</label><input type="text" id="pf_am" value="${p.AM || ''}" /></div>
             </div>
             <div class="row">
-              <div><label>Οδός</label><input id="pf_odo" value="${p.dieythinsi_odo || ''}" /></div>
-              <div><label>Αριθμός</label><input id="pf_ar" value="${p.dieythinsi_arithmos || ''}" /></div>
-              <div><label>Πόλη</label><input id="pf_poli" value="${p.dieythinsi_polh || ''}" /></div>
-              <div><label>Τ.Κ.</label><input id="pf_tk" value="${p.dieythinsi_tk || ''}" /></div>
+              <div><label>Οδός</label><input type="text" id="pf_odo" value="${p.dieythinsi_odo || ''}" /></div>
+              <div><label>Αριθμός</label><input type="text" id="pf_ar" value="${p.dieythinsi_arithmos || ''}" /></div>
+              <div><label>Πόλη</label><input type="text" id="pf_poli" value="${p.dieythinsi_polh || ''}" /></div>
+              <div><label>Τ.Κ.</label><input type="text" id="pf_tk" value="${p.dieythinsi_tk || ''}" /></div>
             </div>
             <div class="sep"></div>
             <button id="btnSaveProfile">Αποθήκευση Αλλαγών</button>
@@ -372,7 +352,7 @@
               </div>
             </div>`;
 
-          // Ypovoli proxeirou
+          // Ypovoli arxeiou
           document.getElementById('formDraft').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.currentTarget;

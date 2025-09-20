@@ -11,6 +11,21 @@
 
   <div id="main-content"></div>
 
+<section>
+  <h2>Δημόσιες Ανακοινώσεις Παρουσιάσεων</h2>
+  <div class="row button-group" style="margin-bottom: 10px;">
+    <input type="date" id="startDate" placeholder="Ημερομηνία Έναρξης" />
+    <input type="date" id="endDate" placeholder="Ημερομηνία Λήξης" />
+  </div>
+  <div class="row button-group">
+    <button onclick="fetchAndDisplayAnakoinoseis()">Εμφάνιση Λίστας</button>
+    <button onclick="fetchAnakoinoseis('json')">Εξαγωγή σε JSON</button>
+    <button onclick="fetchAnakoinoseis('xml')">Εξαγωγή σε XML</button>
+  </div>
+  <div id="anakoinoseis-list" style="margin-top: 20px;"></div>
+  <div id="anakoinoseis-raw-output" style="margin-top: 20px; font-family: monospace; white-space: pre-wrap; background: #f0f0f0; padding: 10px; border-radius: 5px; display:none;"></div>
+</section>
+
 <script>
    //Arxiko setup
     fetch('header.html')
@@ -155,6 +170,97 @@ function updateHeaderButtons() {
     console.error(e);
   }
 }
+
+async function fetchAndDisplayAnakoinoseis() {
+  const outputDiv = document.getElementById('anakoinoseis-list');
+  document.getElementById('anakoinoseis-raw-output').style.display = 'none';
+
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+
+  let url = `/api/public/anakoinoseis?format=json`;
+  if (startDate) {
+    url += `&start_date=${startDate}`;
+  }
+  if (endDate) {
+    url += `&end_date=${endDate}`;
+  }
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Σφάλμα δικτύου: ${response.statusText}`);
+    }
+
+    const anakoinoseis = await response.json();
+    if (anakoinoseis.length === 0) {
+      outputDiv.innerHTML = '<p>Δεν βρέθηκαν ανακοινώσεις για το επιλεγμένο διάστημα.</p>';
+      return;
+    }
+
+    let listHtml = '<h3>Ανακοινώσεις:</h3>';
+    anakoinoseis.forEach(item => {
+      listHtml += `
+        <div class="card" style="margin-bottom: 10px;">
+          <h4>${item.titlos}</h4>
+          <p><strong>Ημερομηνία:</strong> ${item.imerominia_parousiasis || '—'} στις ${item.ora_parousiasis || '—'}</p>
+          <p><strong>Τρόπος:</strong> ${item.tropo_parousiasis || '—'}</p>
+          <p><strong>Τοποθεσία:</strong> ${item.topothesia || '—'}</p>
+        </div>
+      `;
+    });
+
+    outputDiv.innerHTML = listHtml;
+
+  } catch (error) {
+    outputDiv.innerHTML = `<p style="color:red;">Σφάλμα: ${error.message}</p>`;
+    console.error(error);
+  }
+}
+
+async function fetchAnakoinoseis(format) {
+  const outputDiv = document.getElementById('anakoinoseis-raw-output');
+  outputDiv.style.display = 'block';
+  document.getElementById('anakoinoseis-list').innerHTML = ''; // apokripsi listas otan patithei koumpi gia export
+
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+  
+  let url = `/api/public/anakoinoseis?format=${format}`;
+  if (startDate) {
+    url += `&start_date=${startDate}`;
+  }
+  if (endDate) {
+    url += `&end_date=${endDate}`;
+  }
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Σφάλμα δικτύου: ${response.statusText}`);
+    }
+
+    const content = await response.text();
+    const formattedContent = format === 'xml' ? escapeHtml(content) : JSON.stringify(JSON.parse(content), null, 2);
+    
+    outputDiv.innerHTML = `<h3>Αποτελέσματα (${format.toUpperCase()}):</h3><pre>${formattedContent}</pre>`;
+
+  } catch (error) {
+    outputDiv.innerHTML = `<p style="color:red;">Σφάλμα: ${error.message}</p>`;
+    console.error(error);
+  }
+}
+
+// voithitiki synartisi gia swsth emfanish tou XML
+function escapeHtml(unsafe) {
+    return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+// ektelesi ths synarthshs me thn fortwsh ths selidas
+document.addEventListener('DOMContentLoaded', fetchAndDisplayAnakoinoseis);
+document.getElementById('startDate').addEventListener('change', fetchAndDisplayAnakoinoseis);
+document.getElementById('endDate').addEventListener('change', fetchAndDisplayAnakoinoseis);
+
 </script>
 </body>
 </html>
