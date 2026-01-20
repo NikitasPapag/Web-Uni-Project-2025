@@ -256,6 +256,9 @@ ALTER TABLE kritiki_aksiologisis
 ADD CONSTRAINT chk_analytiki_vathmologia_range
 CHECK (analytiki_vathmologia >= 0 AND analytiki_vathmologia <= 10);
 
+ALTER TABLE diplomatikes 
+ADD COLUMN arithmos_protokollou_egkrisis VARCHAR(100);
+
 CREATE INDEX idx_id_didaskonta ON themata(id_didaskonta);
 CREATE INDEX idx_id_thematos ON diplomatikes(id_thematos);
 CREATE INDEX idx_id_foititi ON diplomatikes(id_foititi);
