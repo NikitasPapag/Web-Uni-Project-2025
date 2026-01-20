@@ -12,13 +12,22 @@
   <div id="main-content"></div>
 
 <section>
-  <h2>Δημόσιες Ανακοινώσεις Παρουσιάσεων</h2>
-  <div class="row button-group" style="margin-bottom: 10px;">
-    <input type="date" id="startDate" placeholder="Ημερομηνία Έναρξης" />
-    <input type="date" id="endDate" placeholder="Ημερομηνία Λήξης" />
+  <h2>Ανακοινώσεις Παρουσιάσεων Διπλωματικών</h2>
+<div class="filter-container">
+    <div class="form-group">
+      <label for="startDate">Ημερομηνία Έναρξης</label>
+      <input type="date" id="startDate" />
+    </div>
+
+    <div class="form-group">
+      <label for="endDate">Ημερομηνία Λήξης</label>
+      <input type="date" id="endDate" />
+    </div>
+    
+    <button onclick="fetchAndDisplayAnakoinoseis()">Αναζήτηση</button>
+    <button onclick="hideAnakoinoseis()">Απόκρυψη</button>
   </div>
   <div class="row button-group">
-    <button onclick="fetchAndDisplayAnakoinoseis()">Εμφάνιση Λίστας</button>
     <button onclick="fetchAnakoinoseis('json')">Εξαγωγή σε JSON</button>
     <button onclick="fetchAnakoinoseis('xml')">Εξαγωγή σε XML</button>
   </div>
@@ -27,6 +36,19 @@
 </section>
 
 <script>
+
+async function apiFetch(url, options = {}) {
+  const res = await fetch(url, options);
+  let data = null;
+  try { data = await res.json(); } catch {}
+  
+  if (!res.ok) {
+    const msg = data && data.error ? data.error : 'Σφάλμα αιτήματος.';
+    throw new Error(msg);
+  }
+  return data;
+}
+
    //Arxiko setup
     fetch('header.html')
       .then(res => res.text())
@@ -61,7 +83,7 @@
       
       // Listener gia thn ypovoli tou login form 
       document.addEventListener('submit', async (e) => {
-        // To ID tou login form einai 'loginForm'
+        // To ID tou login form einai loginForm
         if (e.target.id === 'loginForm') {
           e.preventDefault();
           const usernameInput = e.target.querySelector('#username').value.trim().toLowerCase();
@@ -170,51 +192,59 @@ function updateHeaderButtons() {
     console.error(e);
   }
 }
-
+// synartiseis gia dimosies anakoinoseis
 async function fetchAndDisplayAnakoinoseis() {
   const outputDiv = document.getElementById('anakoinoseis-list');
-  document.getElementById('anakoinoseis-raw-output').style.display = 'none';
+  const rawOutputDiv = document.getElementById('anakoinoseis-raw-output');
+  
+  if (!outputDiv || !rawOutputDiv) return;
+
+  rawOutputDiv.style.display = 'none';
 
   const startDate = document.getElementById('startDate').value;
   const endDate = document.getElementById('endDate').value;
 
-  let url = `/api/public/anakoinoseis?format=json`;
-  if (startDate) {
-    url += `&start_date=${startDate}`;
-  }
-  if (endDate) {
-    url += `&end_date=${endDate}`;
-  }
+  const params = new URLSearchParams({ format: 'json' });
+  if (startDate) params.append('start_date', startDate);
+  if (endDate) params.append('end_date', endDate);
 
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Σφάλμα δικτύου: ${response.statusText}`);
-    }
+    const anakoinoseis = await apiFetch(`/api/public/anakoinoseis?${params.toString()}`);
 
-    const anakoinoseis = await response.json();
     if (anakoinoseis.length === 0) {
-      outputDiv.innerHTML = '<p>Δεν βρέθηκαν ανακοινώσεις για το επιλεγμένο διάστημα.</p>';
+      outputDiv.innerHTML = '<p class="muted" style="margin-top:10px;">Δεν βρέθηκαν ανακοινώσεις.</p>';
       return;
     }
 
-    let listHtml = '<h3>Ανακοινώσεις:</h3>';
-    anakoinoseis.forEach(item => {
-      listHtml += `
-        <div class="card" style="margin-bottom: 10px;">
-          <h4>${item.titlos}</h4>
-          <p><strong>Ημερομηνία:</strong> ${item.imerominia_parousiasis || '—'} στις ${item.ora_parousiasis || '—'}</p>
-          <p><strong>Τρόπος:</strong> ${item.tropo_parousiasis || '—'}</p>
-          <p><strong>Τοποθεσία:</strong> ${item.topothesia || '—'}</p>
+    outputDiv.innerHTML = '<h3 style="margin-top: 20px;">Ανακοινώσεις:</h3>' + anakoinoseis.map(item => {
+      const dateObj = new Date(item.imerominia_parousiasis);
+      const dateStr = dateObj.toLocaleDateString('el-GR');
+      const timeStr = item.ora_parousiasis ? item.ora_parousiasis.substring(0, 5) : '—';
+      const mode = item.tropo_parousiasis === 'di_zosis' ? 'Δια ζώσης' : 'Online';
+
+      return `
+        <div class="list-item clickable-diplomatiki" style="cursor: default; margin-bottom: 10px;">
+          
+          <div class="diplomatiki-header" style="cursor: default; padding-bottom: 5px;">
+            <div class="header-main">
+              <span class="diplomatiki-title" style="font-weight: bold; font-size: 1.1rem;">${item.titlos}</span>
+            </div>
+            <span class="status-pill" style="background-color: var(--light-blue); color: var(--p);">
+              ${dateStr}
+            </span>
+          </div>
+
+          <div style="padding: 0 15px 15px 15px; text-align: left; color: #555; font-size: 0.95rem;">
+            <p style="margin: 5px 0;"><strong>Ώρα:</strong> ${timeStr} &nbsp;|&nbsp; <strong>Τρόπος:</strong> ${mode}</p>
+            <p style="margin: 5px 0;"><strong>Τοποθεσία:</strong> ${item.topothesia || '-'}</p>
+          </div>
+
         </div>
       `;
-    });
-
-    outputDiv.innerHTML = listHtml;
+    }).join('');
 
   } catch (error) {
-    outputDiv.innerHTML = `<p style="color:red;">Σφάλμα: ${error.message}</p>`;
-    console.error(error);
+    outputDiv.innerHTML = `<p class="error">Σφάλμα: ${error.message}</p>`;
   }
 }
 
@@ -256,10 +286,12 @@ function escapeHtml(unsafe) {
     return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
-// ektelesi ths synarthshs me thn fortwsh ths selidas
-document.addEventListener('DOMContentLoaded', fetchAndDisplayAnakoinoseis);
-document.getElementById('startDate').addEventListener('change', fetchAndDisplayAnakoinoseis);
-document.getElementById('endDate').addEventListener('change', fetchAndDisplayAnakoinoseis);
+// synartisi gia apokripsi ton anakoinoseon
+function hideAnakoinoseis() {
+  document.getElementById('anakoinoseis-list').innerHTML = "";
+  
+  document.getElementById('anakoinoseis-raw-output').style.display = 'none';
+}
 
 </script>
 </body>

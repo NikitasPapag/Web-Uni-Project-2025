@@ -1,12 +1,3 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Πίνακας Φοιτητή</title>
-  <link rel="stylesheet" href="css/style.css" />
-</head>
-<body class="body.rolos">
   <header>
     <h1>Καλώς ήρθατε <span id="helloUser"></span> ! <br> Χρησιμοποιήστε τα κουμπιά για να περιηγηθείτε.</h1>
   </header>
@@ -17,12 +8,14 @@
       <button id="btnMyDiplomatiki">Προβολή Θέματος</button>
       <button id="btnEditProfile">Επεξεργασία Προφίλ</button>
       <button id="btnManageDiplomatiki">Διαχείριση Διπλωματικής</button>
+      <button id="btnOrismosImerominias">Ορισμός Ημερομηνίας Παρουσίασης</button>
     </div>
 
     <div id="content"></div>
   </main>
 
   <script>
+  {
     // Pairnei id foititi & onoma xristi apo localStorage
     const id = localStorage.getItem('id');
     const username = localStorage.getItem('username');
@@ -160,6 +153,7 @@
       }
       try {
         const d = await apiFetch(`${API_BASE}/diplomatiki/byFoititis/${id}`);
+        currentDiplomatikiId = d.id; // Correctly sets the variable here
         const days = daysSince(d.hmerominia_anathesis);
         content.innerHTML = `
           <div class="card">
@@ -238,7 +232,7 @@
       }
     }
 
-    // DIaxeirisi diplwmatikis
+    // Diaxeirisi diplwmatikis
     async function showManageDiplomatiki() {
       if (!id) return content.innerHTML = `<div class="card error">Δεν βρέθηκε συνεδρία χρήστη.</div>`;
       try {
@@ -259,7 +253,7 @@
               <div class="row">
                 <div>
                   <label>Κωδικός Διδάσκοντα</label>
-                  <input id="inviteDidaskonId" placeholder="π.χ. 12" />
+                  <input input type="text" id="inviteDidaskonId" placeholder="π.χ. 12" />
                 </div>
               </div>
               <button id="btnInvite">Αποστολή Πρόσκλησης</button>
@@ -457,21 +451,100 @@
       }
     }
 
+// synarthsh gia orismo hmerominias parousiasis
+async function showOrismosImerominiasParousiasis() {
+  try {
+    const d = await apiFetch(`${API_BASE}/diplomatiki/byFoititis/${id}`);
+    
+    if (!d) {
+      content.innerHTML = `<div class="card error">Δεν βρέθηκε διπλωματική εργασία.</div>`;
+      return;
+    }
+
+    if (d.katastasi !== 'ypo_exetasi') {
+      content.innerHTML = `<div class="card error">Μπορείτε να ορίσετε ημερομηνία εξέτασης μόνο όταν η διπλωματική είναι σε κατάσταση "Υπό Εξέταση".</div>`;
+      return;
+    }
+    
+    // emfanisi form an plhrei tis proypotheseis
+    content.innerHTML = `
+      <div class="card">
+        <h2>Ορισμός Ημερομηνίας Παρουσίασης</h2>
+        <form id="form_orismos_parousiasis">
+          <div class="row">
+            <div>
+              <label for="imerominia_parousiasis">Ημερομηνία</label>
+              <input type="date" id="imerominia_parousiasis" required />
+            </div>
+            <div>
+              <label for="ora_parousiasis">Ώρα</label>
+              <input type="time" id="ora_parousiasis" required />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="tropo_parousiasis">Τρόπος</label>
+              <select id="tropo_parousiasis">
+                <option value="di_zosis">Δια ζώσης</option>
+                <option value="online">Online</option>
+              </select>
+            </div>
+            <div>
+              <label for="topothesia">Αίθουσα/Σύνδεσμος</label>
+              <input type="text" id="topothesia" required />
+            </div>
+          </div>
+          <div class="sep"></div>
+          <button type="submit">Αποθήκευση</button>
+          <button type="button" id="btnBack">Επιστροφή</button>
+        </form>
+      </div>`;
+    
+    document.getElementById('form_orismos_parousiasis').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        id_diplomatikis: d.id, // to id ths diplomatikis pou kaname fetch
+        imerominia: document.getElementById("imerominia_parousiasis").value,
+        wra: document.getElementById("ora_parousiasis").value,
+        tropos: document.getElementById("tropo_parousiasis").value,
+        topothesia: document.getElementById("topothesia").value
+      };
+      try {
+        await apiFetch('/api/foititis/orismos_parousiasis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        content.innerHTML = `<div class="card success">Η ημερομηνία παρουσίασης ορίστηκε!</div>`;
+      } catch (err) {
+        content.innerHTML = `<div class="card error">Σφάλμα: ${err.message}</div>`;
+      }
+    });
+    document.getElementById('btnBack').addEventListener('click', showMyDiplomatiki);
+  } catch (err) {
+    content.innerHTML = `<div class="card error">${err.message}</div>`;
+  }
+}
+
     // Synartisi arxikopoihshs selidas foititi pou kalei to index
     function initFoititisPage(username) {
         const btnListThemata = document.getElementById('btnListThemata');
-      if (btnListThemata) btnListThemata.addEventListener('click', showThemataList);
-      const btnMyDiplomatiki = document.getElementById('btnMyDiplomatiki');
-      if (btnMyDiplomatiki) btnMyDiplomatiki.addEventListener('click', showMyDiplomatiki);
-      const btnEditProfile = document.getElementById('btnEditProfile');
-      if (btnEditProfile) btnEditProfile.addEventListener('click', showEditProfile);
-      const btnManageDiplomatiki = document.getElementById('btnManageDiplomatiki');
-      if (btnManageDiplomatiki) btnManageDiplomatiki.addEventListener('click', showManageDiplomatiki);
+        if (btnListThemata) btnListThemata.addEventListener('click', showThemataList);
+        const btnMyDiplomatiki = document.getElementById('btnMyDiplomatiki');
+       if (btnMyDiplomatiki) btnMyDiplomatiki.addEventListener('click', showMyDiplomatiki);
+        const btnEditProfile = document.getElementById('btnEditProfile');
+       if (btnEditProfile) btnEditProfile.addEventListener('click', showEditProfile);
+        const btnManageDiplomatiki = document.getElementById('btnManageDiplomatiki');
+       if (btnManageDiplomatiki) btnManageDiplomatiki.addEventListener('click', showManageDiplomatiki);
+      const btnOrismosImerominias = document.getElementById('btnOrismosImerominias');
+       if (btnOrismosImerominias) btnOrismosImerominias.addEventListener ('click', showOrismosImerominiasParousiasis);
         const span = document.getElementById('usernameDisplay');
         if (span) {
             span.textContent = username.charAt(0).toUpperCase() + username.slice(1);
         }
     }
+  window.onload = initFoititisPage;
+  }
 </script>
 </body>
 </html>

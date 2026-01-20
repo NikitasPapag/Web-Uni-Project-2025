@@ -13,57 +13,85 @@
   </header>
 
     <section>
-    <h2>Καταχώρηση Νέου Χρήστη</h2>
-    <form id="form_users">
-      <select id="user_role" required>
-        <option value="foititis">Φοιτητής</option>
-        <option value="didaskon">Διδάσκων</option>
-      </select>
-      <input type="text" id="user_onoma" placeholder="Όνομα" required />
-      <input type="text" id="user_epitheto" placeholder="Επίθετο" required />
-      <input type="email" id="user_email" placeholder="Email" required />
-      <input type="password" id="user_password" placeholder="Κωδικός" required />
-      <input type="text" id="user_am" placeholder="Αριθμός Μητρώου (για Φοιτητή)" />
-      <button type="submit">Καταχώρηση</button>
-    </form>
-  </section>
+    <h2>Καταχώρηση Χρηστών</h2>
+    <div class="upload-container">
+      <p>Επιλέξτε ένα αρχείο .json με τη λίστα χρηστών:</p>
+      <input type="file" id="user_json_file" accept=".json" />
+      <button id="btn_upload_json">Μεταφόρτωση και Καταχώρηση</button>
+    </div>
+    <div id="upload_status"></div>
+    </section>
 
     <section>
     <h2>Όλες οι Διπλωματικές</h2>
     <div id="lista_diplwmatikwn"></div>
   </section>
 
-    <section>
-    <h2>Ορισμός Ημερομηνίας Εξέτασης</h2>
-    <form id="form_orismos">
-      <input type="number" id="id_diplomatikis_exetasi" placeholder="ID Διπλωματικής" required />
-      <input type="date" id="hmerominia_exetasis" required />
-      <input type="time" id="wra_exetasis" required />
-      <select id="tropo_parousiasis">
-        <option value="di_zosis">Δια ζώσης</option>
-        <option value="online">Online</option>
-      </select>
-      <input type="text" id="topothesia_exetasis" placeholder="Αίθουσα/Σύνδεσμος" required />
-      <button type="submit">Αποθήκευση</button>
-    </form>
-  </section>
+    <section>
+      <h2>Καταχώρηση Α.Π. Έγκρισης Θέματος</h2>
+      <form id="form_egkrisi_ap" class="vertical-form">
+        
+        <div class="form-group">
+          <label for="id_diplomatikis_egkrisi">ID Διπλωματικής</label>
+          <input type="number" id="id_diplomatikis_egkrisi" placeholder="π.χ. 101" required />
+        </div>
+
+        <div class="form-group">
+          <label for="ap_egkrisis">Αριθμός Πρωτοκόλλου Έγκρισης</label>
+          <input type="text" id="ap_egkrisis" placeholder="Εισάγετε τον Α.Π." required />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-p">Καταχώρηση</button>
+        </div>
+      </form>
+    </section>
 
     <section>
-    <h2>Ακύρωση Διπλωματικής</h2>
-    <form id="form_akyrosi">
-      <input type="number" id="id_diplomatikis_akyrosi" placeholder="ID Διπλωματικής" required />
-      <input type="text" id="logos_akyrosis" placeholder="Λόγος ακύρωσης" required />
-      <button type="submit">Ακύρωση</button>
-    </form>
-  </section>
+    <h2>Ακύρωση Ανάθεσης Θέματος</h2>
+    <form id="form_akyrosi" class="vertical-form">
 
-    <section>
-    <h2>Προβολή Πρακτικού Εξέτασης</h2>
-    <form id="form_praktiko">
-      <input type="number" id="id_diplomatikis_praktiko" placeholder="ID Διπλωματικής" required />
-      <button type="submit">Άνοιγμα Πρακτικού</button>
-    </form>
-  </section>
+      <div class="form-group">
+          <label for="id_diplomatikis_akyrosi">ID Διπλωματικής</label>
+          <input type="number" id="id_diplomatikis_akyrosi" placeholder="π.χ. 101" required />
+        </div>   
+
+      <div class="form-group">
+          <label for="gs_number">Αριθμός Γ.Σ.</label>
+          <input type="text" id="gs_number" placeholder="Εισάγετε τον αριθμό Γ.Σ." required />
+        </div>
+
+      <div class="form-group">
+          <label for="gs_year">Έτος Γ.Σ.</label>
+          <input type="number" id="gs_year" placeholder="Εισάγετε το έτος Γ.Σ." required />
+        </div>
+
+      <div class="form-group">
+          <label for="logos_akyrosis">Λόγος Ακύρωσης</label>
+          <textarea id="logos_akyrosis" placeholder="Εισάγετε τον λόγο ακύρωσης" required></textarea>
+        </div>
+        
+      <div class="form-actions">
+          <button type="submit" class="btn">Ακύρωση</button>
+        </div>
+    </form>
+  </section>
+
+  <section>
+  <h2>Περάτωση Διπλωματικής Εργασίας</h2>
+  <form id="form_peratosi" class="vertical-form">
+    
+    <div class="form-group">
+      <label for="id_diplomatikis_peratosi">ID Διπλωματικής</label>
+      <input type="number" id="id_diplomatikis_peratosi" placeholder="π.χ. 101" required />
+      <small class="muted">Η διπλωματική πρέπει να είναι "Υπό Εξέταση" και να έχουν καταχωρηθεί βαθμός και σύνδεσμος Νημερτής.</small>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-p">Περάτωση</button>
+    </div>
+  </form>
+</section>
 
   <script>
   
@@ -77,102 +105,216 @@
 
     function logout() { localStorage.clear(); window.location.href = "index.html"; }
 
+    // Boithitiki synartisi gia metafrasi katastasis
+    function translateStatus(status) {
+    const statusMap = {
+        'energi': 'Ενεργή',
+        'ypo_exetasi': 'Υπό Εξέταση',
+        'ypo_anathesi': 'Υπό Ανάθεση', // Added for completeness
+        'olokliromeni': 'Ολοκληρωμένη'
+    };
+    return statusMap[status] || status;
+    }
+
+    // Boithitiki synartisi gia ypologismo xronou pou exei perasei
+    function getTimeElapsed(dateString) {
+        const start = new Date(dateString);
+        const now = new Date();
+        
+        // Ypologismos diaforas se milliseconds
+        const diffTime = Math.abs(now - start);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays < 1) return "Σήμερα";
+        if (diffDays === 1) return "Εχθές";
+        
+        if (diffDays < 30) {
+            return `Πριν από ${diffDays} ημέρες`;
+        } else if (diffDays < 365) {
+            const months = Math.floor(diffDays / 30);
+            return months === 1 ? "Πριν από 1 μήνα" : `Πριν από ${months} μήνες`;
+        } else {
+            const years = Math.floor(diffDays / 365);
+            return years === 1 ? "Πριν από 1 χρόνο" : `Πριν από ${years} χρόνια`;
+        }
+    }
+
     // Fortwsi twn diplwmatikwn
-    async function fortwseDiplwmatikes() {
-      try {
-        const data = await apiFetch('/api/grammateia/diplwmatikes');
-        let html = "";
-        data.forEach(d => {
-          html += `<div class="list-item"><b>ID: ${d.id}</b> - ${d.titlos}<br>Φοιτητής: ${d.foititis_onoma} ${d.foititis_epitheto} (${d.am})<br>Κατάσταση: ${d.katastasi}</div>`;
-        });
-        document.getElementById("lista_diplwmatikwn").innerHTML = html;
-      } catch (err) {
-        console.error("Σφάλμα:", err.message);
-        document.getElementById("lista_diplwmatikwn").innerHTML = `<div class="error-message">Σφάλμα φόρτωσης διπλωματικών: ${err.message}</div>`;
-      }
-    }
+    function toggleDetails(id) {
+      const detailsDiv = document.getElementById(`details-${id}`);
+      if (detailsDiv.style.display === "none") {
+        detailsDiv.style.display = "block";
+      } else {
+        detailsDiv.style.display = "none";
+      }
+    }
 
+    async function fortwseDiplwmatikes() {
+      try {
+        const data = await apiFetch('/api/grammateia/diplwmatikes');
+        const container = document.getElementById("lista_diplwmatikwn");
+        container.innerHTML = "";
+
+        if (data.length === 0) {
+          container.innerHTML = "<p>Δεν βρέθηκαν διπλωματικές.</p>";
+          return;
+        }
+
+        data.forEach(d => {
+          const item = document.createElement("div");
+          item.className = "list-item clickable-diplomatiki";
+          
+          // We calculate elapsed time and translation here
+          const elapsed = getTimeElapsed(d.hmerominia_anathesis);
+          const greekStatus = translateStatus(d.katastasi);
+
+          item.innerHTML = `
+            <div class="diplomatiki-header" onclick="toggleDetails(${d.diplomatiki_id})">
+              <div class="header-main">
+                <strong>#${d.diplomatiki_id}</strong>
+                <span class="diplomatiki-title">${d.titlos}</span>
+              </div>
+              <span class="status-pill status-${d.katastasi}">${greekStatus}</span>
+            </div>
+            
+            <div id="details-${d.diplomatiki_id}" class="diplomatiki-details" style="display: none;">
+              <div class="details-content">
+                <p><strong>Περιγραφή:</strong> ${d.perigrafi || 'Χωρίς περιγραφή'}</p>
+                <p><strong>Τριμελής Επιτροπή:</strong> ${d.trimelis_epitropi || 'Εκκρεμεί'}</p>
+                <p><strong>Χρόνος από την Ανάθεση:</strong> ${elapsed}</p>
+              </div>
+            </div>
+          `;
+          container.appendChild(item);
+        });
+      } catch (err) {
+        console.error("Σφάλμα:", err.message);
+      }
+    }
+    
     // Kataxorisi neoy xristi
-    document.getElementById("form_users").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const payload = {
-        onoma: document.getElementById("user_onoma").value,
-        epitheto: document.getElementById("user_epitheto").value,
-        email: document.getElementById("user_email").value,
-        password: document.getElementById("user_password").value,
-        rolos: document.getElementById("user_role").value
-      };
-      if (payload.rolos === 'foititis') {
-        payload.am = document.getElementById("user_am").value;
-      }
-      try {
-        await apiFetch('/api/grammateia/users', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        alert("Ο χρήστης καταχωρήθηκε επιτυχώς!");
-        e.target.reset();
-      } catch (err) {
-        alert(`Σφάλμα: ${err.message}`);
-      }
-    });
+    document.getElementById("btn_upload_json").addEventListener("click", async () => {
+      const fileInput = document.getElementById("user_json_file");
+      const statusDiv = document.getElementById("upload_status");
+      
+      if (fileInput.files.length === 0) {
+        alert("Παρακαλώ επιλέξτε ένα αρχείο JSON πρώτα.");
+        return;
+      }
 
+      const file = fileInput.files[0];
+      const reader = new FileReader();
 
-    // Orismos eksetasis
-    document.getElementById("form_orismos").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const payload = {
-        id_diplomatikis: Number(document.getElementById("id_diplomatikis_exetasi").value),
-        hmerominia: document.getElementById("hmerominia_exetasis").value,
-        wra: document.getElementById("wra_exetasis").value,
-        tropos: document.getElementById("tropos_exetasis").value,
-        topothesia: document.getElementById("topothesia_exetasis").value
-      };
-      try {
-        await apiFetch('/api/grammateia/orismos_exetasis', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        alert("Η ημερομηνία εξέτασης ορίστηκε!");
-        fortwseDiplwmatikes();
-      } catch (err) {
-        alert(`Σφάλμα: ${err.message}`);
-      }
-    });
+      reader.onload = async (e) => {
+        try {
+          const usersArray = JSON.parse(e.target.result);
+          
+          if (!Array.isArray(usersArray)) {
+            throw new Error("Το αρχείο πρέπει να περιέχει έναν πίνακα (Array) χρηστών.");
+          }
+
+          const response = await fetch('/api/grammateia/users/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ users: usersArray })
+          });
+
+          const result = await response.json();
+          
+          if (response.ok) {
+            alert(`Επιτυχία! Εισήχθησαν ${result.count} χρήστες.`);
+            fortwseDiplwmatikes(); // Refresh the list if needed
+          } else {
+            alert(`Σφάλμα: ${result.error}`);
+          }
+        } catch (err) {
+          alert("Σφάλμα κατά την ανάγνωση του αρχείου: " + err.message);
+        }
+      };
+
+  reader.readAsText(file);
+});
+
+    // kataxorisi arithmou protokollou egkrisis 
+    document.getElementById("form_egkrisi_ap").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    const payload = {
+      id_diplomatikis: Number(document.getElementById("id_diplomatikis_egkrisi").value),
+      arithmos_ap: document.getElementById("ap_egkrisis").value
+    };
+    
+    try {
+      const response = await fetch('/api/grammateia/kataxorisi_ap_egkrisis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+          throw new Error(result.error || "Αποτυχία καταχώρησης");
+      }
+
+      alert("Ο Αριθμός Πρωτοκόλλου καταχωρήθηκε επιτυχώς.");
+      fortwseDiplwmatikes();
+      e.target.reset();
+    } catch (err) {
+      alert(`Σφάλμα: ${err.message}`);
+    }
+  });
 
     // Akirosi diplwmatikis
-    document.getElementById("form_akyrosi").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const payload = {
-        id_diplomatikis: Number(document.getElementById("id_diplomatikis_akyrosi").value),
-        logos: document.getElementById("logos_akyrosis").value
-      };
-      try {
-        await apiFetch('/api/grammateia/akyrosi_diplwmatikis', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        alert("Η διπλωματική ακυρώθηκε!");
-        fortwseDiplwmatikes();
-      } catch (err) {
-        alert(`Σφάλμα: ${err.message}`);
-      }
-    });
+    document.getElementById("form_akyrosi").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = {
+        id_diplomatikis: Number(document.getElementById("id_diplomatikis_akyrosi").value),
+        logos: document.getElementById("logos_akyrosis").value,
+        arithmos_gs: document.getElementById("gs_number").value,
+        etos_gs: Number(document.getElementById("gs_year").value)
+      };
+      
+      try {
+        await apiFetch('/api/grammateia/akyrosi_diplwmatikis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        alert("Η διπλωματική ακυρώθηκε επιτυχώς.");
+        fortwseDiplwmatikes();
+        e.target.reset();
+      } catch (err) {
+        alert(`Σφάλμα: ${err.message}`);
+      }
+    });
 
-    // Provoli praktikoy
-    document.getElementById("form_praktiko").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const id = Number(document.getElementById("id_diplomatikis_praktiko").value);
-      try {
-        const data = await apiFetch(`/api/grammateia/praktiko/${id}`);
-        window.open(data.link, '_blank');
-      } catch (err) {
-        alert(`Σφάλμα: ${err.message}`);
-      }
-    });
+    // Peratosi diplwmatikis 
+    document.getElementById("form_peratosi").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    const id_diplomatikis = Number(document.getElementById("id_diplomatikis_peratosi").value);
+    
+    try {
+      const response = await fetch('/api/grammateia/peratosi_diplomatikis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_diplomatikis })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+          throw new Error(result.error || "Αποτυχία περάτωσης");
+      }
+
+      alert("Η διπλωματική ολοκληρώθηκε (Περατώθηκε) επιτυχώς!");
+      fortwseDiplwmatikes(); // Ανανέωση της λίστας
+      e.target.reset();
+    } catch (err) {
+      alert(`Σφάλμα: ${err.message}`);
+    }
+  });
 
     fortwseDiplwmatikes();
   </script>
