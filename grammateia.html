@@ -118,25 +118,33 @@
 
     // Boithitiki synartisi gia ypologismo xronou pou exei perasei
     function getTimeElapsed(dateString) {
-        const start = new Date(dateString);
-        const now = new Date();
-        
-        // Ypologismos diaforas se milliseconds
-        const diffTime = Math.abs(now - start);
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        
-        if (diffDays < 1) return "Σήμερα";
-        if (diffDays === 1) return "Εχθές";
-        
-        if (diffDays < 30) {
-            return `Πριν από ${diffDays} ημέρες`;
-        } else if (diffDays < 365) {
-            const months = Math.floor(diffDays / 30);
-            return months === 1 ? "Πριν από 1 μήνα" : `Πριν από ${months} μήνες`;
-        } else {
-            const years = Math.floor(diffDays / 365);
-            return years === 1 ? "Πριν από 1 χρόνο" : `Πριν από ${years} χρόνια`;
-        }
+      if (!dateString) return "—";
+      const start = new Date(dateString);
+      const now = new Date();
+      
+      const diffTime = Math.abs(now - start);
+      const totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (totalDays < 1) return "Σήμερα";
+      if (totalDays === 1) return "Εχθές";
+      if (totalDays < 30) return `${totalDays} ημέρες`;
+      
+      if (totalDays < 365) {
+          const months = Math.floor(totalDays / 30);
+          return months === 1 ? "1 μήνας" : `${months} μήνες`;
+      } 
+      
+      const years = Math.floor(totalDays / 365);
+      const remainingDays = totalDays % 365;
+      const extraMonths = Math.floor(remainingDays / 30);
+
+      let output = years === 1 ? "1 χρόνος" : `${years} χρόνια`;
+      
+      if (extraMonths > 0) {
+          output += extraMonths === 1 ? " και 1 μήνας" : ` και ${extraMonths} μήνες`;
+      }
+      
+      return output;
     }
 
     // Fortwsi twn diplwmatikwn

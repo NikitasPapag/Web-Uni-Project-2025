@@ -428,59 +428,18 @@ app.post(`${API_BASE}/grammateia/peratosi_diplomatikis`, (req, res) => {
    ENDPOINTS Πίνακα Φοιτητή
    --------------------------- */
 
-/* themata lista & single */
-app.get(`${API_BASE}/themata`, (req, res) => {
-  const q = 'SELECT id, titlos, perigrafi, arxeio FROM themata ORDER BY id DESC';
-  connection.query(q, (err, results) => {
-    if (err) return res.status(500).json({ error: 'DB error' });
-    res.json(results);
-  });
-});
-
-app.get(`${API_BASE}/themata/:id`, (req, res) => {
-  const { id } = req.params;
-  const q = 'SELECT id, titlos, perigrafi, arxeio FROM themata WHERE id = ?';
-  connection.query(q, [id], (err, results) => {
-    if (err) return res.status(500).json({ error: 'DB error' });
-    if (results.length === 0) return res.status(404).json({ error: 'Το θέμα δεν βρέθηκε.' });
-    res.json(results[0]);
-  });
-});
-
-/* anathesi thematos se foititi */
-app.post(`${API_BASE}/diplomatikes/anathesi`, (req, res) => {
-  const { id_thematos, id_foititi } = req.body;
-  if (!id_thematos || !id_foititi) return res.status(400).json({ error: 'Απαιτούνται id_thematos και id_foititi.' });
-
-  // error an o foititis exei idi diplomatiki
-  const check = 'SELECT * FROM diplomatikes WHERE id_foititi = ?';
-  connection.query(check, [id_foititi], (err, rows) => {
-    if (err) return res.status(500).json({ error: 'DB error' });
-    if (rows.length > 0) return res.status(400).json({ error: 'Ο/Η φοιτητής/ρια έχει ήδη διπλωματική.' });
-
-    const insert = 'INSERT INTO diplomatikes (id_thematos, id_foititi, katastasi, hmerominia_anathesis) VALUES (?, ?, "ypo_anathesi", NOW())';
-    connection.query(insert, [id_thematos, id_foititi], (err2, result) => {
-      if (err2) {
-        console.error(err2);
-        return res.status(500).json({ error: 'Σφάλμα καταχώρησης διπλωματικής.' });
-      }
-      return res.json({ success: true, id: result.insertId });
-    });
-  });
-});
-
 /* Get trexousa diplomatiki foititi (by student id) */
 app.get(`${API_BASE}/diplomatiki/byFoititis/:id`, (req, res) => {
     const { id } = req.params;
     const q = `
-        SELECT
-            d.*,
-            t.titlos,
-            t.perigrafi,
-            t.arxeio AS perigrafi_arxeio,
+        SELECT 
+            d.*, 
+            t.titlos, 
+            t.perigrafi, 
+            t.arxeio AS perigrafi_arxeio, 
             GROUP_CONCAT(CONCAT(x.onoma, ' ', x.epitheto) SEPARATOR ', ') AS melh_trimelous
         FROM diplomatikes AS d
-        JOIN themata AS t ON d.id_thematos = t.id
+        LEFT JOIN themata AS t ON d.id_thematos = t.id  /* Changed to LEFT JOIN for safety */
         LEFT JOIN trimeloys AS tr ON d.id = tr.id_diplomatikis
         LEFT JOIN xristes AS x ON tr.id_melous = x.id
         WHERE d.id_foititi = ?
@@ -542,7 +501,7 @@ app.put(`${API_BASE}/profil/:id`, (req, res) => {
       payload.tilefono_kinhto || null,
       payload.tilefono_stathero || null,
       payload.dieythinsi_odo || null,
-      payload.dieythinsi_arithnos || null,
+      payload.dieythinsi_arithmos || null,
       payload.dieythinsi_polh || null,
       payload.dieythinsi_tk || null
     ], (err2) => {
@@ -611,7 +570,7 @@ app.post('/api/foititis/orismos_parousiasis', (req, res) => {
     return res.status(400).json({ error: 'Όλα τα πεδία είναι υποχρεωτικά.' });
   }
 
-  const troposDB = (tropos === 'Δια ζώσης') ? 'di_zosis' : 'online';
+  const troposDB = (tropos === 'di_zosis') ? 'di_zosis' : 'online';
 
   const insertExam = `
     INSERT INTO anakoinoseis (id_diplomatikis, titlos, imerominia_parousiasis, ora_parousiasis, tropo_parousiasis, topothesia)
@@ -631,20 +590,6 @@ app.post('/api/foititis/orismos_parousiasis', (req, res) => {
   });
 });
 
-/* Get praktiko link*/
-app.get(`${API_BASE}/diplomatiki/:id/praktiko`, (req, res) => {
-  const { id } = req.params;
-  const q = 'SELECT praktiko_link, praktiko_html FROM diplomatikes WHERE id = ?';
-  connection.query(q, [id], (err, results) => {
-    if (err) return res.status(500).json({ error: 'DB error' });
-    if (!results.length) return res.status(404).json({ error: 'Diplomatiki not found' });
-    const r = results[0];
-    if (r.praktiko_html) return res.json({ html: r.praktiko_html });
-    if (r.praktiko_link) return res.json({ link: r.praktiko_link });
-    return res.status(404).json({ error: 'No praktiko available' });
-  });
-});
-
 /* Save nimertis link */
 app.post(`${API_BASE}/diplomatiki/nimertis`, (req, res) => {
   const { id_diplomatikis, link_nimertis } = req.body;
@@ -656,21 +601,67 @@ app.post(`${API_BASE}/diplomatiki/nimertis`, (req, res) => {
   });
 });
 
-/* Get logs gia diplomatiki */
-app.get(`${API_BASE}/diplomatiki/:id/logs`, (req, res) => {
+// get arxeia diplomatikis
+app.get(`${API_BASE}/diplomatiki/:id/arxeia`, (req, res) => {
   const { id } = req.params;
-  const q = `
-    SELECT 'prosklisi' AS typ, p.id, p.katastasi, p.imerominia_prosklisis AS imerominia
-    FROM proskliseis p
-    WHERE p.id_diplomatikis = ?
-    ORDER BY p.imerominia_prosklisis DESC
-  `;
+  const q = 'SELECT * FROM arxeia WHERE id_diplomatikis = ? ORDER BY hmerominia DESC';
+  
   connection.query(q, [id], (err, results) => {
-    if (err) return res.status(500).json({ error: 'DB error' });
-    return res.json(results || []);
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Σφάλμα βάσης δεδομένων.' });
+    }
+    res.json(results);
   });
 });
 
+// save nimertis link
+app.post('/api/foititis/nimertis', (req, res) => {
+  const { id_diplomatikis, nimertis_link } = req.body;
+  
+  if (!id_diplomatikis || !nimertis_link) {
+    return res.status(400).json({ error: 'Missing id or link' });
+  }
+
+  const q = 'UPDATE diplomatikes SET nimertis_link = ? WHERE id = ?';
+  connection.query(q, [nimertis_link, id_diplomatikis], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json({ success: true });
+  });
+});
+
+// upload arxeiou i link
+app.post(`${API_BASE}/diplomatiki/arxeia`, upload.single('file'), (req, res) => {
+  const { id_diplomatikis, typos, link } = req.body;
+  
+  // an  einai arxeio, apothikeuoume to path sto pedio link kai to onoma sto onoma_arxeiou
+  let filePath = link || null;
+  let fileName = req.body.onoma_arxeiou || null;
+
+  if (req.file) {
+    filePath = `/uploads/${req.file.filename}`;
+    fileName = req.file.originalname;
+  } else if (typos === 'link' && link) {
+    if (!fileName) fileName = 'Εξωτερικός Σύνδεσμος';
+  }
+
+  if (!id_diplomatikis || !typos) {
+    return res.status(400).json({ error: 'Λείπουν απαραίτητα στοιχεία.' });
+  }
+
+  const q = `
+    INSERT INTO arxeia (id_diplomatikis, typos, onoma_arxeiou, link)
+    VALUES (?, ?, ?, ?)
+  `;
+
+  connection.query(q, [id_diplomatikis, typos, fileName, filePath], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Σφάλμα κατά την αποθήκευση.' });
+    }
+    res.json({ success: true, message: 'Το αρχείο/σύνδεσμος αποθηκεύτηκε.' });
+  });
+});
 
 /* ---------------------------
         Δημόσιο ENDPOINT
