@@ -34,7 +34,7 @@ const upload = multer({ storage });
 const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: '',         // set your password
+  password: '',
   database: 'diplomatikes_db',
   multipleStatements: false
 });
@@ -94,26 +94,42 @@ res.json(results);
 });
 
 // Create thema
-app.post(`${API_BASE}/themata`, (req, res) => {
-const { titlos, perigrafi, id_didaskonta } = req.body;
-if (!titlos || !id_didaskonta) return res.status(400).json({ error: 'Λείπουν πεδία' });
-const q = 'INSERT INTO themata (titlos, perigrafi, id_didaskonta) VALUES (?, ?, ?)';
-connection.query(q, [titlos, perigrafi || null, id_didaskonta], (err, result) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json({ success: true, id: result.insertId });
-});
+app.post(`${API_BASE}/themata`, upload.single('arxeio'), (req, res) => {
+  const { titlos, perigrafi, id_didaskonta } = req.body;
+  
+  const arxeioName = req.file ? req.file.filename : null;
+
+  if (!titlos || !id_didaskonta) return res.status(400).json({ error: 'Λείπουν πεδία' });
+  
+  const q = 'INSERT INTO themata (titlos, perigrafi, arxeio, id_didaskonta) VALUES (?, ?, ?, ?)';
+  
+  connection.query(q, [titlos, perigrafi || null, arxeioName, id_didaskonta], (err, result) => {
+    if (err) return res.status(500).json({ error: 'DB error' });
+    res.json({ success: true, id: result.insertId });
+  });
 });
 
 
 // Update thema
-app.put(`${API_BASE}/themata/:id`, (req, res) => {
-const { id } = req.params;
-const { titlos, perigrafi } = req.body;
-const q = 'UPDATE themata SET titlos = ?, perigrafi = ? WHERE id = ?';
-connection.query(q, [titlos, perigrafi, id], (err) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json({ success: true });
-});
+app.post(`${API_BASE}/themata/update/:id`, upload.single('arxeio'), (req, res) => {
+  const id = req.params.id;
+  const { titlos, perigrafi } = req.body;
+  
+  let q = 'UPDATE themata SET titlos=?, perigrafi=?';
+  let params = [titlos, perigrafi];
+
+  if (req.file) {
+      q += ', arxeio=?';
+      params.push(req.file.filename);
+  }
+
+  q += ' WHERE id=?';
+  params.push(id);
+
+  connection.query(q, params, (err) => {
+      if (err) return res.status(500).json({ error: 'DB error' });
+      res.json({ success: true });
+  });
 });
 
 
@@ -127,141 +143,358 @@ res.json({ success: true });
 });
 });
 
+// anazhtisi foititwn
+app.get(`${API_BASE}/foitites/anazitisi`, (req, res) => {
+    const term = req.query.q;
+    if (!term || term.length < 2) return res.json([]); // toulaxiston 2 xaraktires
 
-// 2. Aitiseis diplomatikwn
-app.get(`${API_BASE}/didaskon/:id/aitiseis`, (req, res) => {
-const { id } = req.params;
-const q = `
-SELECT d.id AS id_diplomatikis, d.id_thematos, t.titlos,
-x.onoma, x.epitheto, x.email
-FROM diplomatikes d
-JOIN themata t ON d.id_thematos = t.id
-JOIN xristes x ON d.id_foititi = x.id
-WHERE t.id_didaskonta = ? AND d.katastasi = 'ypo_anathesi'
-`;
-connection.query(q, [id], (err, results) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json(results);
-});
-});
-
-  //apofasi gia aitisi
-app.post(`${API_BASE}/diplomatikes/:id/apofasi`, (req, res) => {
-const { id } = req.params;
-const { apofasi } = req.body;
-if (apofasi === 'apodoxi') {
-const q = 'UPDATE diplomatikes SET katastasi = "energi" WHERE id = ?';
-connection.query(q, [id], (err) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json({ success: true });
-});
-} else if (apofasi === 'aporripsi') {
-const q = 'DELETE FROM diplomatikes WHERE id = ?';
-connection.query(q, [id], (err) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json({ success: true });
-});
-} else {
-res.status(400).json({ error: 'Μη έγκυρη απόφαση' });
-}
+    const wild = `%${term}%`;
+    const q = `
+        SELECT x.id, x.onoma, x.epitheto, f.AM 
+        FROM xristes x
+        JOIN foititis f ON x.id = f.id
+        WHERE (x.onoma LIKE ? OR x.epitheto LIKE ? OR f.AM LIKE ?)
+        LIMIT 10
+    `;
+    
+    connection.query(q, [wild, wild, wild], (err, results) => {
+        if (err) return res.status(500).json({ error: 'DB error' });
+        res.json(results);
+    });
 });
 
+// anathesi thematos kai allagi katastasis se ypo_anathesi
+app.post(`${API_BASE}/anathesi`, (req, res) => {
+    const { id_thematos, id_foititi } = req.body;
 
-// 3. Proskliseis didaskonta
+    if (!id_thematos || !id_foititi) {
+        return res.status(400).json({ error: 'Missing topic or student' });
+    }
+
+    // elegxos an o foititis exei hdh diplomatiki
+    const checkQ = 'SELECT id FROM diplomatikes WHERE id_foititi = ?';
+    connection.query(checkQ, [id_foititi], (err, results) => {
+        if (err) return res.status(500).json({ error: 'DB check error' });
+        if (results.length > 0) {
+            return res.status(400).json({ error: 'Ο φοιτητής έχει ήδη αναλάβει διπλωματική.' });
+        }
+
+        // eisagwgh neas diplomatikis sth bash
+        const insertQ = `
+            INSERT INTO diplomatikes (id_thematos, id_foititi, hmerominia_anathesis, katastasi) 
+            VALUES (?, ?, NOW(), 'ypo_anathesi')
+        `;
+        
+        connection.query(insertQ, [id_thematos, id_foititi], (err2) => {
+            if (err2) return res.status(500).json({ error: 'DB Insert error' });
+                        
+            res.json({ success: true });
+        });
+    });
+});
+
+// anairesh anathesis
+app.delete(`${API_BASE}/anathesi/:id`, (req, res) => {
+    const id_diplomatikis = req.params.id;
+
+        const delQ = 'DELETE FROM diplomatikes WHERE id = ?';
+        connection.query(delQ, [id_diplomatikis], (err2) => {
+            if (err2) return res.status(500).json({ error: 'DB Delete error' });
+        });
+    });
+
+// Proskliseis didaskonta (Fetch the list of invitations)
 app.get(`${API_BASE}/didaskon/:id/proskliseis`, (req, res) => {
-const { id } = req.params;
-const q = `
-SELECT p.id AS id_prosklisis, p.katastasi, t.titlos,
-xf.onoma AS onoma_foititi, xf.epitheto AS epitheto_foititi, xf.email AS email_foititi
-FROM proskliseis p
-JOIN diplomatikes d ON p.id_diplomatikis = d.id
-JOIN themata t ON d.id_thematos = t.id
-JOIN xristes xf ON d.id_foititi = xf.id
-WHERE p.id_didaskonta = ?
-ORDER BY p.id DESC
-`;
-connection.query(q, [id], (err, results) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json(results);
-});
+    const { id } = req.params;
+    const q = `
+    SELECT p.id AS id_prosklisis, p.katastasi, t.titlos,
+    xf.onoma AS onoma_foititi, xf.epitheto AS epitheto_foititi, xf.email AS email_foititi
+    FROM proskliseis p
+    JOIN diplomatikes d ON p.id_diplomatikis = d.id
+    JOIN themata t ON d.id_thematos = t.id
+    JOIN xristes xf ON d.id_foititi = xf.id
+    WHERE p.id_didaskonta = ?
+    ORDER BY p.id DESC
+    `;
+    connection.query(q, [id], (err, results) => {
+        if (err) return res.status(500).json({ error: 'DB error' });
+        res.json(results);
+    });
 });
 
-  //apantisi gia prosklisi
+// Apantisi se prosklisi
 app.post(`${API_BASE}/proskliseis/:id/apantisi`, (req, res) => {
-const { id } = req.params;
-const { katastasi } = req.body;
-const q = 'UPDATE proskliseis SET katastasi = ?, hmerominia_apantisis = NOW() WHERE id = ?';
-connection.query(q, [katastasi, id], (err) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json({ success: true });
-});
+    const { id } = req.params;       
+    const { katastasi } = req.body;
+
+    // enhmerwsh katastasis prosklisis
+    const qUpdate = 'UPDATE proskliseis SET katastasi = ?, hmerominia_apantisis = NOW() WHERE id = ?';
+
+    connection.query(qUpdate, [katastasi, id], (err, result) => {
+        if (err) {
+            console.error("DB Error updating invitation:", err);
+            return res.status(500).json({ error: 'Database update failed' });
+        }
+        
+        // an apporifthi
+        if (katastasi !== 'apodexti') {
+            return res.json({ success: true, message: 'Η πρόσκληση απορρίφθηκε.' });
+        }
+
+        // mihanismos apodexti prosklhsh
+        
+        // plhrofories apo prosklhsh
+        const qGetDetails = 'SELECT id_diplomatikis, id_didaskonta FROM proskliseis WHERE id = ?';
+        connection.query(qGetDetails, [id], (err2, rows) => {
+            if (err2 || rows.length === 0) return res.status(500).json({ error: 'Error fetching details' });
+
+            const { id_diplomatikis, id_didaskonta } = rows[0];
+
+            // prosthiki didaskonta ws melos
+            const qInsertMember = 'INSERT INTO trimeloys (id_diplomatikis, id_melous, rolos) VALUES (?, ?, "melos")';
+            
+            connection.query(qInsertMember, [id_diplomatikis, id_didaskonta], (err3) => {
+                if (err3) console.error("Error adding member:", err3.message);
+
+                // plhthos appodextwn prosklisewn
+                const qCount = 'SELECT COUNT(*) as count FROM proskliseis WHERE id_diplomatikis = ? AND katastasi = "apodexti"';
+                
+                connection.query(qCount, [id_diplomatikis], (err4, countResult) => {
+                    if (err4) return res.status(500).json({ error: 'Error counting members' });
+
+                    const acceptedCount = countResult[0].count;
+
+                    // 2 melh apodexthkan
+                    if (acceptedCount >= 2) {
+                        console.log(`🎓 Thesis ${id_diplomatikis}: 2 members found. Activating...`);
+
+                        // allagh katastasis diplomatikis se energi
+                        const qActivate = "UPDATE diplomatikes SET katastasi = 'energi' WHERE id = ?";
+                        connection.query(qActivate, [id_diplomatikis], (err5) => {
+                            if (err5) console.error("Error activating thesis:", err5);
+                        });
+
+                        // akyrwsh ekremwn prosklisewn
+                        const qCancelOthers = "UPDATE proskliseis SET katastasi = 'akyrosi' WHERE id_diplomatikis = ? AND katastasi = 'ekremis'";
+                        connection.query(qCancelOthers, [id_diplomatikis], (err6) => {
+                            if (err6) console.error("Error cancelling Proskliseis:", err6);
+                        });
+
+                        // prosthhkhg epivleponta sthn trimeloys
+                        const qFindSupervisor = `
+                            SELECT t.id_didaskonta 
+                            FROM diplomatikes d 
+                            JOIN themata t ON d.id_thematos = t.id 
+                            WHERE d.id = ?`;
+                            
+                        connection.query(qFindSupervisor, [id_diplomatikis], (err7, superRows) => {
+                            if (!err7 && superRows.length > 0) {
+                                const supervisorId = superRows[0].id_didaskonta;
+                                const qAddSupervisor = 'INSERT INTO trimeloys (id_diplomatikis, id_melous, rolos) VALUES (?, ?, "epivlepontas")';
+                                connection.query(qAddSupervisor, [id_diplomatikis, supervisorId], (err8) => {
+                                    if(err8) console.error("Supervisor insert error:", err8.message);
+                                });
+                            }
+                        });
+
+                        return res.json({ success: true, message: 'Η επιτροπή συμπληρώθηκε και η διπλωματική ενεργοποιήθηκε!' });
+                    }
+
+                    // an den exoun apodextei 2 melh
+                    return res.json({ success: true, message: `Η πρόσκληση έγινε δεκτή. (${acceptedCount}/2 μέλη)` });
+                });
+            });
+        });
+    });
 });
 
-
-// 4. Diplomatikes pou epivlepei o didaskon
+// diplomatikes pou symmetexei o didaskon
 app.get(`${API_BASE}/didaskon/:id/diplwmatikes`, (req, res) => {
-const { id } = req.params;
-const q = `
-SELECT d.id, d.katastasi, d.hmerominia_anathesis, d.final_bathmos,
-d.praktiko_link, d.nimertis_link,
-t.titlos, x.onoma, x.epitheto, x.email
-FROM diplomatikes d
-JOIN themata t ON d.id_thematos = t.id
-JOIN xristes x ON d.id_foititi = x.id
-WHERE t.id_didaskonta = ?
-ORDER BY d.id DESC
-`;
-connection.query(q, [id], (err, results) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json(results);
+    const { id } = req.params;
+    const q = `
+    SELECT 
+        d.id, 
+        t.id_didaskonta, /* <--- THIS WAS MISSING */
+        d.katastasi, 
+        d.hmerominia_anathesis, 
+        d.final_bathmos,
+        d.praktiko_link, 
+        d.nimertis_link,
+        t.titlos, 
+        xf.onoma AS foititis_onoma, 
+        xf.epitheto AS foititis_epitheto, 
+        xf.email AS foititis_email,
+        GROUP_CONCAT(CONCAT(x.onoma, ' ', x.epitheto) SEPARATOR ', ') AS trimelis_epitropi
+    FROM diplomatikes d
+    JOIN themata t ON d.id_thematos = t.id
+    JOIN xristes xf ON d.id_foititi = xf.id
+
+    -- Join gia ta melh trimeloys
+    LEFT JOIN trimeloys all_tr ON d.id = all_tr.id_diplomatikis
+    LEFT JOIN xristes x ON all_tr.id_melous = x.id
+
+    -- Join gia sygkekrimeno didaskon
+    LEFT JOIN trimeloys check_tr ON d.id = check_tr.id_diplomatikis AND check_tr.id_melous = ?
+    
+    -- filtro epivlepontas h melos
+    WHERE t.id_didaskonta = ? OR check_tr.id_melous IS NOT NULL
+    
+    GROUP BY d.id
+    ORDER BY d.id DESC
+    `;
+    
+    connection.query(q, [id, id], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'DB error fetching theses.' });
+        }
+        res.json(results);
+    });
 });
+
+// akyrwsh anathesis
+app.post(`${API_BASE}/didaskon/akyrosi_anathesis`, (req, res) => {
+    const { id_diplomatikis, id_didaskonta } = req.body;
+
+    // alyrwsh mono apo epivleponta
+    const qVerify = `
+        SELECT d.id 
+        FROM diplomatikes d 
+        JOIN themata t ON d.id_thematos = t.id 
+        WHERE d.id = ? AND t.id_didaskonta = ?`;
+
+    connection.query(qVerify, [id_diplomatikis, id_didaskonta], (err, rows) => {
+        if (err || rows.length === 0) {
+            return res.status(403).json({ error: 'Δεν έχετε δικαίωμα ακύρωσης ή η διπλωματική δεν βρέθηκε.' });
+        }
+
+        // allagh katastasis se akyromeni
+        const qUpdate = "UPDATE diplomatikes SET katastasi = 'akyromeni' WHERE id = ?";
+        connection.query(qUpdate, [id_diplomatikis], (err2) => {
+            if (err2) return res.status(500).json({ error: 'DB Error updating status' });
+
+            // diagrafh trimeloys kai prosklisewn
+            const qDelTri = "DELETE FROM trimeloys WHERE id_diplomatikis = ?";
+            const qDelPros = "DELETE FROM proskliseis WHERE id_diplomatikis = ?";
+
+            connection.query(qDelTri, [id_diplomatikis], () => {
+                connection.query(qDelPros, [id_diplomatikis], () => {
+                    res.json({ success: true, message: 'Η ανάθεση ακυρώθηκε επιτυχώς.' });
+                });
+            });
+        });
+    });
+});
+
+// get bathmous gia diplomatiki
+app.get(`${API_BASE}/diplomatiki/:id/vathmologia`, (req, res) => {
+    const { id } = req.params;
+    
+    const q = `
+        SELECT 
+            t.id_melous, 
+            t.epidosi, 
+            t.rolos,
+            x.onoma, 
+            x.epitheto 
+        FROM trimeloys t
+        JOIN xristes x ON t.id_melous = x.id
+        WHERE t.id_diplomatikis = ?
+    `;
+
+    connection.query(q, [id], (err, results) => {
+        if (err) return res.status(500).json({ error: 'DB Error fetching grades' });
+        res.json(results);
+    });
+});
+
+// apothikeysh bathmou kai ypologismos telikou bathmou
+app.post(`${API_BASE}/diplomatiki/vathmologia`, (req, res) => {
+    const { id_diplomatikis, id_didaskonta, vathmos } = req.body;
+
+    // egkyres times
+    if (vathmos === '' || vathmos === null || vathmos < 0 || vathmos > 10) {
+        return res.status(400).json({ error: 'Μη έγκυρος βαθμός (0-10).' });
+    }
+
+    // ananewsh bathmou gia melos
+    const qUpdate = `
+        UPDATE trimeloys 
+        SET epidosi = ? 
+        WHERE id_diplomatikis = ? AND id_melous = ?
+    `;
+
+    connection.query(qUpdate, [vathmos, id_diplomatikis, id_didaskonta], (err, result) => {
+        if (err) return res.status(500).json({ error: 'DB Error updating grade' });
+
+        // elegxos an ola ta melh exoun vathmologisei
+        const qCheck = `SELECT epidosi FROM trimeloys WHERE id_diplomatikis = ?`;
+        
+        connection.query(qCheck, [id_diplomatikis], (err2, rows) => {
+            if (err2) return res.status(500).json({ error: 'DB Error checking grades' });
+
+            // elegxos gia 3 melh
+            if (rows.length === 3) {
+                const grades = rows.map(r => r.epidosi);
+                
+                // elegxow an yparxei kenos bathmos
+                const allGraded = grades.every(g => g !== null && g !== undefined);
+
+                if (allGraded) {
+                    // ypologismos mesos orou
+                    const sum = grades.reduce((a, b) => a + parseFloat(b), 0);
+                    const avg = (sum / 3).toFixed(2); 
+
+                    // telikos bathmos kai allagi katastasis se peratomeni
+                    const qFinal = `UPDATE diplomatikes SET final_bathmos = ?, katastasi = 'peratomeni' WHERE id = ?`;
+                    
+                    connection.query(qFinal, [avg, id_diplomatikis], (err3) => {
+                        if (err3) console.error("Error updating final grade:", err3);
+                        
+                        return res.json({ 
+                            success: true, 
+                            message: `Ο βαθμός καταχωρήθηκε. Η τελική βαθμολογία (${avg}) υπολογίστηκε!`,
+                            diplomatiki_peratomeni: true // shmaia gia allagh sto frontend
+                        });
+                    });
+                } else {
+                    res.json({ 
+                        success: true, 
+                        message: 'Ο βαθμός καταχωρήθηκε. Αναμονή για τα υπόλοιπα μέλη.',
+                        diplomatiki_peratomeni: false
+                    });
+                }
+            } else {
+                res.json({ success: true, message: 'Ο βαθμός καταχωρήθηκε.' });
+            }
+        });
+    });
 });
 
 
-// 5. Epitropes pou symmetexei o didaskon
-app.get(`${API_BASE}/didaskon/:id/epitropes`, (req, res) => {
-const { id } = req.params;
-const q = `
-SELECT d.id AS id_diplomatikis, d.katastasi, t.titlos,
-xf.onoma, xf.epitheto, xf.email
-FROM trimeloys tr
-JOIN diplomatikes d ON tr.id_diplomatikis = d.id
-JOIN themata t ON d.id_thematos = t.id
-JOIN xristes xf ON d.id_foititi = xf.id
-WHERE tr.id_melous = ?
-ORDER BY d.id DESC
-`;
-connection.query(q, [id], (err, results) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-res.json(results);
-});
-});
+/* allagh katastasis se ypo_exetasi */
+app.post(`${API_BASE}/didaskon/set_ypo_exetasi`, (req, res) => {
+    const { id_diplomatikis, id_didaskonta } = req.body;
 
+    // elegxos an didaskon einai epivlepontas
+    const qVerify = `
+        SELECT d.id 
+        FROM diplomatikes d 
+        JOIN themata t ON d.id_thematos = t.id 
+        WHERE d.id = ? AND t.id_didaskonta = ?`;
 
-// Submit vathmos + kritiki
-app.post(`${API_BASE}/diplomatikes/:id/vathmos`, (req, res) => {
-const { id } = req.params;
-const { id_didaskonta, bathmos, kritiki } = req.body;
+    connection.query(qVerify, [id_diplomatikis, id_didaskonta], (err, rows) => {
+        if (err || rows.length === 0) {
+            return res.status(403).json({ error: 'Δεν έχετε δικαίωμα αλλαγής κατάστασης.' });
+        }
 
-
-// Vriskei to antistoixo melos apo trimeloys
-const qFind = 'SELECT id FROM trimeloys WHERE id_diplomatikis = ? AND id_melous = ? LIMIT 1';
-connection.query(qFind, [id, id_didaskonta], (err, rows) => {
-if (err) return res.status(500).json({ error: 'DB error' });
-if (!rows.length) return res.status(404).json({ error: 'Δεν βρέθηκε συμμετοχή στην επιτροπή' });
-
-
-const id_trimelous = rows[0].id;
-const qIns = `
-INSERT INTO kritiki_aksiologisis (id_trimelous, analytiki_kritiki, analytiki_vathmologia)
-VALUES (?, ?, ?)
-ON DUPLICATE KEY UPDATE analytiki_kritiki = VALUES(analytiki_kritiki), analytiki_vathmologia = VALUES(analytiki_vathmologia)
-`;
-connection.query(qIns, [id_trimelous, kritiki || '', bathmos], (err2) => {
-if (err2) return res.status(500).json({ error: 'DB error saving grade' });
-res.json({ success: true });
-});
-});
+        // allagh katastasis
+        const qUpdate = "UPDATE diplomatikes SET katastasi = 'ypo_exetasi' WHERE id = ?";
+        connection.query(qUpdate, [id_diplomatikis], (err2) => {
+            if (err2) return res.status(500).json({ error: 'DB Error updating status' });
+            res.json({ success: true, message: 'Η διπλωματική τέθηκε σε κατάσταση Υπό Εξέταση.' });
+        });
+    });
 });
 
 /* ---------------------------
@@ -310,13 +543,13 @@ app.post(`${API_BASE}/grammateia/users/bulk`, async (req, res) => {
     const { onoma, epitheto, email, password, rolos, am } = user;
 
     try {
-      // Validation
+      // elegxos pediwn
       if (!onoma || !epitheto || !email || !password || !rolos) continue;
 
       // Hash Password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Insert into xristes (username is generated by DB)
+      // Insert into xristes
       const [userResult] = await connection.promise().query(
         'INSERT INTO xristes (onoma, epitheto, email, password, rolos) VALUES (?, ?, ?, ?, ?)',
         [onoma, epitheto, email, hashedPassword, rolos]
@@ -324,7 +557,7 @@ app.post(`${API_BASE}/grammateia/users/bulk`, async (req, res) => {
 
       const newUserId = userResult.insertId;
 
-      // Role-specific inserts
+      // instert analoga me rolo
       if (rolos === 'foititis') {
         await connection.promise().query('INSERT INTO foititis (id, AM) VALUES (?, ?)', [newUserId, am || null]);
       } else if (rolos === 'didaskon') {
@@ -347,7 +580,7 @@ app.post(`${API_BASE}/grammateia/users/bulk`, async (req, res) => {
   res.json({ success: true, count: successCount, errors: errors.length > 0 ? errors : null });
 });
 
-/* 3) akyrwsh diplomatikis */
+/* akyrwsh diplomatikis */
 app.post(`${API_BASE}/grammateia/akyrosi_diplwmatikis`, (req, res) => {
   const { id_diplomatikis, logos, arithmos_gs, etos_gs } = req.body;
 
@@ -369,7 +602,7 @@ app.post(`${API_BASE}/grammateia/akyrosi_diplwmatikis`, (req, res) => {
   });
 });
 
-/* 4) kataxorisi arithmou protokollou egkrisis */
+/* kataxorisi arithmou protokollou egkrisis */
 app.post(`${API_BASE}/grammateia/kataxorisi_ap_egkrisis`, (req, res) => {
   const { id_diplomatikis, arithmos_ap } = req.body;
 
@@ -395,7 +628,7 @@ app.post(`${API_BASE}/grammateia/kataxorisi_ap_egkrisis`, (req, res) => {
   });
 });
 
-/* 5) peratosi diplomatikis */
+/* peratosi diplomatikis */
 app.post(`${API_BASE}/grammateia/peratosi_diplomatikis`, (req, res) => {
   const { id_diplomatikis } = req.body;
 
@@ -428,7 +661,7 @@ app.post(`${API_BASE}/grammateia/peratosi_diplomatikis`, (req, res) => {
    ENDPOINTS Πίνακα Φοιτητή
    --------------------------- */
 
-/* Get trexousa diplomatiki foititi (by student id) */
+/* Get trexousa diplomatiki foititi apo id */
 app.get(`${API_BASE}/diplomatiki/byFoititis/:id`, (req, res) => {
     const { id } = req.params;
     const q = `
@@ -487,7 +720,7 @@ app.put(`${API_BASE}/profil/:id`, (req, res) => {
       console.error(err);
       return res.status(500).json({ error: 'DB error updating xristes' });
     }
-    // If student - update foititis table
+    // ananewsh foititis table
     const updateF = `
       INSERT INTO foititis (id, AM, tilefono_kinhto, tilefono_stathero, dieythinsi_odo, dieythinsi_arithmos, dieythinsi_polh, dieythinsi_tk)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -514,6 +747,26 @@ app.put(`${API_BASE}/profil/:id`, (req, res) => {
   });
 });
 
+// anazitisi gia prosklisi
+app.get(`${API_BASE}/didaskontes/anazitisi`, (req, res) => {
+    const term = req.query.q;
+    if (!term || term.length < 2) return res.json([]); // toylaxiston 2 xaraktires
+
+    const wild = `%${term}%`;
+    const q = `
+        SELECT id, onoma, epitheto, email 
+        FROM xristes 
+        WHERE rolos = 'didaskon' 
+        AND (onoma LIKE ? OR epitheto LIKE ?)
+        LIMIT 10
+    `;
+    
+    connection.query(q, [wild, wild], (err, results) => {
+        if (err) return res.status(500).json({ error: 'DB error' });
+        res.json(results);
+    });
+});
+
 /* dimiourgia prosklisis trimelous kai lista prosklisewn gia diplomatiki */
 app.post(`${API_BASE}/trimelis/prosklisi`, (req, res) => {
   const { id_diplomatikis, id_didaskonta } = req.body;
@@ -532,7 +785,7 @@ app.post(`${API_BASE}/trimelis/prosklisi`, (req, res) => {
 app.get(`${API_BASE}/trimelis/proskliseis/:id`, (req, res) => {
   const { id } = req.params; // id diplomatikis
   const q = `
-    SELECT p.*, x.onoma, x.epitheto, p.katastasi AS katastasi_prosklisis
+    SELECT p.*, x.onoma, x.epitheto, x.email, p.katastasi AS katastasi_prosklisis
     FROM proskliseis p
     JOIN xristes x ON p.id_didaskonta = x.id
     WHERE p.id_diplomatikis = ?
@@ -544,7 +797,7 @@ app.get(`${API_BASE}/trimelis/proskliseis/:id`, (req, res) => {
   });
 });
 
-/* anevasma arxeiou - to form periexei id_diplomatikis kai proairetika pedio gia link */
+/* anevasma arxeiou kai pedio gia link */
 app.post(`${API_BASE}/diplomatiki/upload_draft`, upload.single('arxeio'), (req, res) => {
   const id_diplomatikis = req.body.id_diplomatikis;
   const link = req.body.link || null;
@@ -590,12 +843,12 @@ app.post('/api/foititis/orismos_parousiasis', (req, res) => {
   });
 });
 
-/* Save nimertis link */
+/* apothikeysh nimertis link */
 app.post(`${API_BASE}/diplomatiki/nimertis`, (req, res) => {
-  const { id_diplomatikis, link_nimertis } = req.body;
-  if (!id_diplomatikis || !link_nimertis) return res.status(400).json({ error: 'Missing fields' });
+  const { id_diplomatikis, nimertis_link } = req.body;
+  if (!id_diplomatikis || !nimertis_link) return res.status(400).json({ error: 'Missing fields' });
   const q = 'UPDATE diplomatikes SET nimertis_link = ? WHERE id = ?';
-  connection.query(q, [link_nimertis, id_diplomatikis], (err) => {
+  connection.query(q, [nimertis_link, id_diplomatikis], (err) => {
     if (err) return res.status(500).json({ error: 'DB error' });
     return res.json({ success: true });
   });
@@ -612,21 +865,6 @@ app.get(`${API_BASE}/diplomatiki/:id/arxeia`, (req, res) => {
       return res.status(500).json({ error: 'Σφάλμα βάσης δεδομένων.' });
     }
     res.json(results);
-  });
-});
-
-// save nimertis link
-app.post('/api/foititis/nimertis', (req, res) => {
-  const { id_diplomatikis, nimertis_link } = req.body;
-  
-  if (!id_diplomatikis || !nimertis_link) {
-    return res.status(400).json({ error: 'Missing id or link' });
-  }
-
-  const q = 'UPDATE diplomatikes SET nimertis_link = ? WHERE id = ?';
-  connection.query(q, [nimertis_link, id_diplomatikis], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    res.json({ success: true });
   });
 });
 

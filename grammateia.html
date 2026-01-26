@@ -95,6 +95,35 @@
 
   <script>
   
+    // eidopoiiseis
+    function showToast(message, type = 'success') {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        // eikonidia
+        const icon = type === 'success' ? '✅' : '⚠️';
+        
+        toast.innerHTML = `
+            <span class="toast-icon">${icon}</span>
+            <span>${message}</span>
+        `;
+
+        container.appendChild(toast);
+
+        // 5 deuterolepta diarkeia
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.5s forwards';
+            setTimeout(() => toast.remove(), 500);
+        }, 5000);
+    }
+
     // Boithitiki synartisi gia fetching me error handling
     async function apiFetch(url, opts = {}) {
       const res = await fetch(url, opts);
@@ -105,18 +134,18 @@
 
     function logout() { localStorage.clear(); window.location.href = "index.html"; }
 
-    // Boithitiki synartisi gia metafrasi katastasis
+    // katasaseis diplwmatikwn
     function translateStatus(status) {
     const statusMap = {
         'energi': 'Ενεργή',
         'ypo_exetasi': 'Υπό Εξέταση',
-        'ypo_anathesi': 'Υπό Ανάθεση', // Added for completeness
+        'ypo_anathesi': 'Υπό Ανάθεση',
         'olokliromeni': 'Ολοκληρωμένη'
     };
     return statusMap[status] || status;
     }
 
-    // Boithitiki synartisi gia ypologismo xronou pou exei perasei
+    // synartisi gia ypologismo xronou pou exei perasei
     function getTimeElapsed(dateString) {
       if (!dateString) return "—";
       const start = new Date(dateString);
@@ -172,7 +201,7 @@
           const item = document.createElement("div");
           item.className = "list-item clickable-diplomatiki";
           
-          // We calculate elapsed time and translation here
+          // ypologismos xronou kai katastasis
           const elapsed = getTimeElapsed(d.hmerominia_anathesis);
           const greekStatus = translateStatus(d.katastasi);
 
@@ -206,7 +235,7 @@
       const statusDiv = document.getElementById("upload_status");
       
       if (fileInput.files.length === 0) {
-        alert("Παρακαλώ επιλέξτε ένα αρχείο JSON πρώτα.");
+        showToast("Παρακαλώ επιλέξτε ένα αρχείο JSON πρώτα.", 'error');
         return;
       }
 
@@ -230,13 +259,13 @@
           const result = await response.json();
           
           if (response.ok) {
-            alert(`Επιτυχία! Εισήχθησαν ${result.count} χρήστες.`);
-            fortwseDiplwmatikes(); // Refresh the list if needed
+            showToast(`Επιτυχία! Εισήχθησαν ${result.count} χρήστες.`, 'success');
+            fortwseDiplwmatikes();
           } else {
-            alert(`Σφάλμα: ${result.error}`);
+            showToast(`Σφάλμα: ${result.error}`, 'error');
           }
         } catch (err) {
-          alert("Σφάλμα κατά την ανάγνωση του αρχείου: " + err.message);
+          showToast("Σφάλμα κατά την ανάγνωση του αρχείου: " + err.message, 'error');
         }
       };
 
@@ -265,11 +294,11 @@
           throw new Error(result.error || "Αποτυχία καταχώρησης");
       }
 
-      alert("Ο Αριθμός Πρωτοκόλλου καταχωρήθηκε επιτυχώς.");
+      showToast("Ο Αριθμός Πρωτοκόλλου καταχωρήθηκε επιτυχώς.", 'success');
       fortwseDiplwmatikes();
       e.target.reset();
     } catch (err) {
-      alert(`Σφάλμα: ${err.message}`);
+      showToast(`Σφάλμα: ${err.message}`, 'error');
     }
   });
 
@@ -289,11 +318,11 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        alert("Η διπλωματική ακυρώθηκε επιτυχώς.");
+        showToast("Η διπλωματική ακυρώθηκε επιτυχώς.", 'success');
         fortwseDiplwmatikes();
         e.target.reset();
       } catch (err) {
-        alert(`Σφάλμα: ${err.message}`);
+        showToast(`Σφάλμα: ${err.message}`, 'error');
       }
     });
 
@@ -316,11 +345,11 @@
           throw new Error(result.error || "Αποτυχία περάτωσης");
       }
 
-      alert("Η διπλωματική ολοκληρώθηκε (Περατώθηκε) επιτυχώς!");
-      fortwseDiplwmatikes(); // Ανανέωση της λίστας
+      showToast("Η διπλωματική ολοκληρώθηκε (Περατώθηκε) επιτυχώς!", 'success');
+      fortwseDiplwmatikes();
       e.target.reset();
     } catch (err) {
-      alert(`Σφάλμα: ${err.message}`);
+      showToast(`Σφάλμα: ${err.message}`, 'error');
     }
   });
 

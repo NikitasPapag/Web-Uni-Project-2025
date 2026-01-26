@@ -32,7 +32,6 @@
     <button onclick="fetchAnakoinoseis('xml')">Εξαγωγή σε XML</button>
   </div>
   <div id="anakoinoseis-list" style="margin-top: 20px;"></div>
-  <div id="anakoinoseis-raw-output" style="margin-top: 20px; font-family: monospace; white-space: pre-wrap; background: #f0f0f0; padding: 10px; border-radius: 5px; display:none;"></div>
 </section>
 
 <script>
@@ -83,7 +82,7 @@ async function apiFetch(url, options = {}) {
       
       // Listener gia thn ypovoli tou login form 
       document.addEventListener('submit', async (e) => {
-        // To ID tou login form einai loginForm
+        // To id tou login form pairnei loginForm
         if (e.target.id === 'loginForm') {
           e.preventDefault();
           const usernameInput = e.target.querySelector('#username').value.trim().toLowerCase();
@@ -148,8 +147,12 @@ function updateHeaderButtons() {
     function loadLoginForm() {
       document.getElementById('main-content').innerHTML = `
         <form id="loginForm" class="login-form">
-          <input type="text" id="username" placeholder="Εισάγετε το username σας." required />
-          <input type="password" id="password" placeholder="Εισάγετε τον κωδικό σας." required />
+          <h2>Είσοδος</h2>
+          
+          <input type="text" id="username" name="username" autocomplete="username" placeholder="Εισάγετε το username σας" required />
+          
+          <input type="password" id="password" name="password" autocomplete="current-password" placeholder="Εισάγετε τον κωδικό σας" required />
+          
           <button type="submit">Είσοδος</button>          
           <p id="errorMsg" class="error-msg"></p>
         </form>
@@ -157,7 +160,7 @@ function updateHeaderButtons() {
 
       updateHeaderButtons();
     }
-
+    
     async function loadSelidaXristi(rolos, username) {
   try {
     const response = await fetch(`${rolos}.html`);
@@ -192,15 +195,11 @@ function updateHeaderButtons() {
     console.error(e);
   }
 }
+
 // synartiseis gia dimosies anakoinoseis
 async function fetchAndDisplayAnakoinoseis() {
   const outputDiv = document.getElementById('anakoinoseis-list');
-  const rawOutputDiv = document.getElementById('anakoinoseis-raw-output');
   
-  if (!outputDiv || !rawOutputDiv) return;
-
-  rawOutputDiv.style.display = 'none';
-
   const startDate = document.getElementById('startDate').value;
   const endDate = document.getElementById('endDate').value;
 
@@ -248,11 +247,8 @@ async function fetchAndDisplayAnakoinoseis() {
   }
 }
 
+// synartisi gia eksagwgi anakoinwsewn
 async function fetchAnakoinoseis(format) {
-  const outputDiv = document.getElementById('anakoinoseis-raw-output');
-  outputDiv.style.display = 'block';
-  document.getElementById('anakoinoseis-list').innerHTML = ''; // apokripsi listas otan patithei koumpi gia export
-
   const startDate = document.getElementById('startDate').value;
   const endDate = document.getElementById('endDate').value;
   
@@ -270,28 +266,38 @@ async function fetchAnakoinoseis(format) {
       throw new Error(`Σφάλμα δικτύου: ${response.statusText}`);
     }
 
-    const content = await response.text();
-    const formattedContent = format === 'xml' ? escapeHtml(content) : JSON.stringify(JSON.parse(content), null, 2);
-    
-    outputDiv.innerHTML = `<h3>Αποτελέσματα (${format.toUpperCase()}):</h3><pre>${formattedContent}</pre>`;
+    // raw text
+    let content = await response.text();
+    let mimeType = 'text/plain';
+
+    // format
+    if (format === 'json') {
+        // morfopoihsh 
+        content = JSON.stringify(JSON.parse(content), null, 2);
+        mimeType = 'application/json';
+    } else if (format === 'xml') {
+        mimeType = 'application/xml';
+    }
+
+    // link gia download
+    const blob = new Blob([content], { type: mimeType });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `anakoinoseis_export.${format}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 
   } catch (error) {
-    outputDiv.innerHTML = `<p style="color:red;">Σφάλμα: ${error.message}</p>`;
     console.error(error);
+    alert(`Σφάλμα κατά την εξαγωγή: ${error.message}`);
   }
-}
-
-// voithitiki synartisi gia swsth emfanish tou XML
-function escapeHtml(unsafe) {
-    return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
 // synartisi gia apokripsi ton anakoinoseon
 function hideAnakoinoseis() {
   document.getElementById('anakoinoseis-list').innerHTML = "";
-  
-  document.getElementById('anakoinoseis-raw-output').style.display = 'none';
-}
+  }
 
 </script>
 </body>

@@ -14,10 +14,9 @@
   <main>
     <div class="bar">
       <button id="btnThemata">Τα Θέματά μου</button>
-      <button id="btnAitiseis" class="alt">Αιτήσεις Φοιτητών</button>
+      <button id="btnAnathesi">Ανάθεση Θέματος</button>
       <button id="btnProskliseis" class="alt">Προσκλήσεις Τριμελούς</button>
-      <button id="btnDiplomatikes">Οι Διπλωματικές μου</button>
-      <button id="btnEpitropes">Τριμελείς που Συμμετέχω</button>
+      <button id="btnDiplomatikes">Διπλωματικές</button>
     </div>
 
     <div id="content"></div>
@@ -25,6 +24,45 @@
 
   <script>
   {
+    // eidopoiiseis
+    function showToast(message, type = 'success') {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        // eikonidia
+        const icon = type === 'success' ? '✅' : '⚠️';
+        
+        toast.innerHTML = `
+            <span class="toast-icon">${icon}</span>
+            <span>${message}</span>
+        `;
+
+        container.appendChild(toast);
+
+        // 5 deuterolepta diarkeia
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.5s forwards';
+            setTimeout(() => toast.remove(), 500);
+        }, 5000);
+    }
+
+    // emfanish leptomereiwn listas diplomatikwvn
+    function toggleDetails(id) {
+      const detailsDiv = document.getElementById(`details-${id}`);
+      if (detailsDiv.style.display === "none") {
+        detailsDiv.style.display = "block";
+      } else {
+        detailsDiv.style.display = "none";
+      }
+    }
+
     const id = localStorage.getItem('id');
     const username = localStorage.getItem('username');
     const rolos = localStorage.getItem('rolos');
@@ -47,34 +85,53 @@
 
     // Themata didaskonta
     async function showThemata() {
+      if (!id) return;
       try {
-        const list = await apiFetch(`/api/didaskon/${id}/themata`);
+        const themata = await apiFetch(`${API_BASE}/didaskon/${id}/themata`);
+        
         let html = `
-          <section>
-            <h2>Τα Θέματά μου</h2>
-            <p class="muted">Προσθέστε, επεξεργαστείτε ή διαγράψτε θέματα διπλωματικών.</p>
-            <button onclick="formNewThema()">+ Νέο Θέμα</button>
-          </section>`;
-        if (!list.length) {
-          html += `<section>Δεν έχετε δηλώσει θέματα.</section>`;
+            <div class="actions" style="position: relative; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; min-height: 40px;">
+                <h2 style="margin:0;">Τα Θέματά μου</h2>
+                <button id="btnNewThema" class="button" style="position: absolute; right: 0;">＋ Νέο Θέμα</button>
+            </div>
+            
+            <div class="list-container">`;
+
+        if (themata.length === 0) {
+            html += `<div class="card muted" style="text-align:center;">Δεν έχετε καταχωρήσει θέματα.</div>`;
         } else {
-          html += list.map(t => `
-            <section>
-              <h3>${escapeHtml(t.titlos)}</h3>
-              <p>${escapeHtml(t.perigrafi || '')}</p>
-              <div class="row">
-                <button onclick="viewAitiseisForThema(${t.id})">Αιτήσεις Φοιτητών</button>
-                <button onclick="editThema(${t.id}, \`${escapeHtml(t.titlos)}\`, \`${escapeHtml(t.perigrafi || '')}\`)">Επεξεργασία</button>
-                <button class="danger" onclick="deleteThema(${t.id})">Διαγραφή</button>
-              </div>
-            </section>
-          `).join('');
+            themata.forEach(t => {
+                const shortDesc = t.perigrafi && t.perigrafi.length > 150 
+                                  ? t.perigrafi.substring(0, 150) + '...' 
+                                  : (t.perigrafi || '<span class="muted">Χωρίς περιγραφή</span>');
+
+                html += `
+                <div class="list-item">
+                    <div class="list-item-content">
+                        <div class="list-item-title">${t.titlos}</div>
+                        <p class="list-item-desc">${shortDesc}</p>
+                        ${t.arxeio ? `<div class="list-item-meta">📎 PDF Αρχείο Διαθέσιμο</div>` : ''}
+                    </div>
+                    
+                    <div class="list-item-actions">
+                        <button class="btn-edit button small alt" data-id="${t.id}">✏️ Επεξεργασία</button>
+                    </div>
+                </div>`;
+            });
         }
+        html += `</div>`;
         content.innerHTML = html;
-      } catch (e) {
-        content.innerHTML = `<section>${e.message}</section>`;
+
+          // listeners gia koumpia
+          document.getElementById('btnNewThema').onclick = () => editThema(null);
+          document.querySelectorAll('.btn-edit').forEach(btn => {
+              btn.onclick = () => editThema(btn.dataset.id);
+          });
+
+        } catch (err) {
+          content.innerHTML = `<div class="card error">${err.message}</div>`;
+        }
       }
-    }
 
     // Neo thema didaskonta
     function formNewThema() {
@@ -94,7 +151,7 @@
     async function saveNewThema() {
       const titlos = document.getElementById('titlos').value.trim();
       const perigrafi = document.getElementById('perigrafi').value.trim();
-      if (!titlos) return alert('Συμπληρώστε τίτλο.');
+      if (!titlos) return showToast('Συμπληρώστε τίτλο.', 'error');
       try {
         await apiFetch('/api/themata', {
           method: 'POST',
@@ -102,205 +159,659 @@
           body: JSON.stringify({ titlos, perigrafi, id_didaskonta: id })
         });
         showThemata();
-      } catch (e) { alert(e.message); }
+      } catch (e) { showToast(e.message, 'error'); }
     }
 
-    function editThema(id, titlos, perigrafi) {
-      content.innerHTML = `
-        <section>
-          <h3>Επεξεργασία Θέματος</h3>
-          <label>Τίτλος</label>
-          <input id="titlos" type="text" value="${titlos}" />
-          <label>Περιγραφή</label>
-          <textarea id="perigrafi">${perigrafi}</textarea>
-          <div class="row">
-            <button onclick="saveEditThema(${id})">Αποθήκευση</button>
-            <button class="alt" onclick="showThemata()">Άκυρο</button>
-          </div>
-        </section>`;
-    }
-    async function saveEditThema(id) {
-      const titlos = document.getElementById('titlos').value.trim();
-      const perigrafi = document.getElementById('perigrafi').value.trim();
-      if (!titlos) return alert('Συμπληρώστε τίτλο.');
-      try {
-        await apiFetch(`/api/themata/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ titlos, perigrafi })
-        });
-        showThemata();
-      } catch (e) { alert(e.message); }
-    }
-    async function deleteThema(id) {
-      if (!confirm('Οριστική διαγραφή θέματος;')) return;
-      try {
-        await apiFetch(`/api/themata/${id}`, { method: 'DELETE' });
-        showThemata();
-      } catch (e) { alert(e.message); }
-    }
+    async function editThema(themaId) {
+        let thema = { titlos: '', perigrafi: '', arxeio: null };
+        let isEdit = false;
 
-    // Aitiseis 
-    async function showAitiseis() {
-      try {
-        const list = await apiFetch(`/api/didaskon/${id}/aitiseis`);
-        if (!list.length) {
-          content.innerHTML = `<section>Δεν υπάρχουν εκκρεμείς αιτήσεις.</section>`;
-          return;
+        if (themaId) {
+            isEdit = true;
+            try {
+                const list = await apiFetch(`${API_BASE}/didaskon/${id}/themata`);
+                thema = list.find(t => t.id == themaId) || thema;
+            } catch (err) {
+                console.error(err);
+            }
         }
-        content.innerHTML = list.map(a => `
-          <section>
-            <h3>${escapeHtml(a.titlos)}</h3>
-            <p><span class="kapsoula">Υπό ανάθεση</span></p>
-            <p><strong>Φοιτητής:</strong> ${escapeHtml(a.onoma)} ${escapeHtml(a.epitheto)} — ${escapeHtml(a.email)}</p>
-            <div class="row">
-              <button onclick="apofasiAitisis(${a.id_diplomatikis}, 'apodoxi')">Αποδοχή</button>
-              <button class="danger" onclick="apofasiAitisis(${a.id_diplomatikis}, 'aporripsi')">Απόρριψη</button>
+
+        content.innerHTML = `
+        <div class="card">
+            <h2>${isEdit ? 'Επεξεργασία Θέματος' : 'Δημιουργία Νέου Θέματος'}</h2>
+            <form id="formThema">
+                <div class="row">
+                    <div>
+                        <label>Τίτλος</label>
+                        <input type="text" id="th_titlos" value="${thema.titlos}" required />
+                    </div>
+                </div>
+                <div class="row">
+                    <div>
+                        <label>Περιγραφή</label>
+                        <textarea id="th_perigrafi" rows="4">${thema.perigrafi || ''}</textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div>
+                        <label>Αρχείο Περιγραφής (PDF)</label>
+                        <input type="file" id="th_arxeio" accept="application/pdf" />
+                        ${isEdit && thema.arxeio ? `<p class="muted">Υπάρχει ήδη αρχείο: ${thema.arxeio}</p>` : ''}
+                    </div>
+                </div>
+                
+                <div class="sep"></div>
+                
+                <div class="actions">
+                    <button type="submit" class="button success">Αποθήκευση</button>
+                    <button type="button" id="btnCancel" class="button alt">Άκυρο</button>
+                    ${isEdit ? `<button type="button" id="btnDelete" class="button error">Διαγραφή</button>` : ''}
+                </div>
+            </form>
+        </div>`;
+
+        // koumpi akyrosis
+        document.getElementById('btnCancel').onclick = showThemata;
+
+        // koumpi diagrafis
+        if (isEdit) {
+            document.getElementById('btnDelete').onclick = async () => {
+                try {
+                    const res = await fetch(`${API_BASE}/themata/${themaId}`, { method: 'DELETE' });
+                    
+                    if (!res.ok) {
+                        throw new Error('Η διαγραφή απέτυχε. Το θέμα ίσως έχει ήδη ανατεθεί σε φοιτητή.');
+                    }
+
+                    showToast('Διαγράφηκε επιτυχώς.', 'success');
+                    showThemata();
+                } catch(err) { 
+                    showToast('Σφάλμα: ' + err.message, 'error'); 
+                }
+            };
+        }
+
+        // koumpi apothikefsis
+        document.getElementById('formThema').onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const fd = new FormData();
+            fd.append('titlos', document.getElementById('th_titlos').value);
+            fd.append('perigrafi', document.getElementById('th_perigrafi').value);
+            fd.append('id_didaskonta', id); 
+            
+            const fileInput = document.getElementById('th_arxeio');
+            if (fileInput.files[0]) {
+                fd.append('arxeio', fileInput.files[0]);
+            }
+
+            try {
+                let url = `${API_BASE}/themata`;
+                
+                if (isEdit) {
+                    url = `${API_BASE}/themata/update/${themaId}`;
+                }
+
+                const res = await fetch(url, {
+                    method: 'POST', 
+                    body: fd
+                });
+                
+                if (!res.ok) throw new Error('Σφάλμα αποθήκευσης');
+                
+                showToast('Αποθηκεύτηκε!', 'success');
+                showThemata();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        };
+    }
+
+    //anathesi thematos
+    async function showAnathesiPage() {
+        let myThemata = [];
+        try {
+            const allThemata = await apiFetch(`${API_BASE}/didaskon/${id}/themata`);
+            myThemata = allThemata;
+        } catch(e) { console.error(e); }
+
+        content.innerHTML = `
+            <div class="card">
+                <h2>Ανάθεση Θέματος</h2>
+                <p>Επιλέξτε ένα από τα διαθέσιμα θέματά σας και αναζητήστε τον φοιτητή.</p>
+                
+                <form id="formAnathesi">
+                    <div class="row">
+                        <div>
+                            <label>Επιλογή Θέματος</label>
+                            <select id="selThema" required>
+                                <option value="">-- Επιλέξτε Θέμα --</option>
+                                ${myThemata.map(t => `<option value="${t.id}">${t.titlos}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row" style="position: relative;">
+                        <div>
+                            <label>Αναζήτηση Φοιτητή (ΑΜ ή Όνομα)</label>
+                            <input type="text" id="Foititis" placeholder="π.χ. 1059 ή Παπαδόπουλος" autocomplete="off" required />
+                            <div id="anazitisiResults"></div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="selectedFoititisId" />
+                    
+                    <div style="margin-top: 10px; font-weight: bold; color: var(--p);" id="selectedFoititisName"></div>
+
+                    <div class="sep"></div>
+                    <button type="submit" class="button">Προσωρινή Ανάθεση</button>
+                </form>
             </div>
-          </section>
-        `).join('');
-      } catch (e) {
-        content.innerHTML = `<section>${e.message}</section>`;
+        `;
+
+        // anazitisi foititi
+        const Input = document.getElementById('Foititis');
+        const resultsBox = document.getElementById('anazitisiResults'); 
+        resultsBox.id = "anazitisiResults";
+
+        const hiddenId = document.getElementById('selectedFoititisId');
+        const displaySelected = document.getElementById('selectedFoititisName');
+
+        Input.onkeyup = async () => {
+            const term = Input.value;
+            if (term.length < 2) {
+                resultsBox.style.display = 'none';
+                return;
+            }
+
+            try {
+                const results = await apiFetch(`${API_BASE}/foitites/anazitisi?q=${encodeURIComponent(term)}`);
+                
+                if (results.length > 0) {
+                    resultsBox.innerHTML = results.map(s => `
+                        <div class="anazitisi-item" data-id="${s.id}" data-name="${s.onoma} ${s.epitheto} (${s.AM})">
+                            <strong>${s.epitheto} ${s.onoma}</strong> <br>
+                            <small>AM: ${s.AM}</small>
+                        </div>
+                    `).join('');
+                    resultsBox.style.display = 'block';
+
+                    // mihanismos epilogis apo lista
+                    document.querySelectorAll('.anazitisi-item').forEach(item => {
+                        item.onclick = () => {
+                            Input.value = item.dataset.name;
+                            hiddenId.value = item.dataset.id;
+                            displaySelected.textContent = `Επιλέχθηκε: ${item.dataset.name}`;
+                            resultsBox.style.display = 'none';
+                        };
+                    });
+                } else {
+                    resultsBox.innerHTML = '<div style="padding:10px;">Δεν βρέθηκαν αποτελέσματα</div>';
+                    resultsBox.style.display = 'block';
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        // apokripsi apotelesmaton otan ginetai click ektos
+        document.addEventListener('click', (e) => {
+            if (e.target !== Input) resultsBox.style.display = 'none';
+        });
+
+        // kataxorisi anathesis
+        document.getElementById('formAnathesi').onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const id_thematos = document.getElementById('selThema').value;
+            const id_foititi = hiddenId.value;
+
+            if (!id_thematos) return showToast('Παρακαλώ επιλέξτε θέμα.', 'error');
+            if (!id_foititi) return showToast('Παρακαλώ επιλέξτε φοιτητή από τη λίστα.', 'error');
+
+            try {
+                await fetch(`${API_BASE}/anathesi`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_thematos, id_foititi })
+                }).then(async res => {
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Σφάλμα ανάθεσης');
+                });
+
+                showToast('Η ανάθεση έγινε επιτυχώς (Υπό Ανάθεση).', 'success');
+                showAnathesiPage();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        };
+    }
+
+    // Proskliseis se trimelh
+  async function showProskliseis() {
+      if (!id) return;
+      try {
+        const allProskliseis = await apiFetch(`${API_BASE}/didaskon/${id}/proskliseis`);
+        
+        const pending = allProskliseis.filter(p => p.katastasi === 'ekremis');
+        
+        
+        let html = `
+            <div class="actions" style="position: relative; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; min-height: 40px;">
+                <h2 style="margin:0;">Εκκρεμείς Προσκλήσεις</h2>
+            </div>
+            
+            <div class="list-container">`;
+
+        if (pending.length === 0) {
+             html += `<div class="card muted" style="text-align:center;">Δεν υπάρχουν νέες προσκλήσεις.</div>`;
+        } else {
+             pending.forEach(p => {
+                 html += `
+                 <div class="list-item">
+                     <div class="list-item-content">
+                         <div class="list-item-title">${p.epitheto_foititi} ${p.onoma_foititi}</div>
+                         <p class="list-item-desc">Θέμα: "${p.titlos}"</p>
+                         <div class="list-item-meta" style="font-weight:normal;">Email: ${p.email_foititi}</div>
+                     </div>
+                     
+                     <div class="list-item-actions" style="display:flex; gap:10px;">
+                         <button class="button success small btn-accept" data-id="${p.id_prosklisis}">✔ Αποδοχή</button>
+                         <button class="button error small btn-reject" data-id="${p.id_prosklisis}">✖ Απόρριψη</button>
+                     </div>
+                 </div>`;
+             });
+        }
+        html += `</div>`;
+        content.innerHTML = html;
+        
+        // kataxorisi katastasis apofasis
+        const sendDecision = async (id_prosklisis, decision) => {
+            try {
+                await fetch(`${API_BASE}/proskliseis/${id_prosklisis}/apantisi`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ katastasi: decision })
+                }).then(async res => {
+                    if (!res.ok) throw new Error('Σφάλμα ενημέρωσης.');
+                });
+                
+                showToast(decision === 'apodexti' ? 'Η πρόσκληση έγινε αποδεκτή.' : 'Η πρόσκληση απορρίφθηκε.', 'success');
+                showProskliseis();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        };
+
+        document.querySelectorAll('.btn-accept').forEach(btn => {
+            btn.onclick = () => {
+                sendDecision(btn.dataset.id, 'apodexti');
+            };
+        });
+
+        document.querySelectorAll('.btn-reject').forEach(btn => {
+            btn.onclick = () => {
+                sendDecision(btn.dataset.id, 'aporrifthi');
+            };
+        });
+
+      } catch (err) {
+        content.innerHTML = `<div class="card error">${err.message}</div>`;
       }
     }
-    async function viewAitiseisForThema(idThema) {
-      const list = await apiFetch(`/api/didaskon/${id}/aitiseis`);
-      const f = list.filter(x => x.id_thematos === idThema);
-      if (!f.length) return alert('Δεν υπάρχουν αιτήσεις για το θέμα.');
-      content.innerHTML = f.map(a => `
-        <section>
-          <h3>${escapeHtml(a.titlos)}</h3>
-          <p><span class="kapsoula">Υπό ανάθεση</span></p>
-          <p><strong>Φοιτητής:</strong> ${escapeHtml(a.onoma)} ${escapeHtml(a.epitheto)} — ${escapeHtml(a.email)}</p>
-          <div class="row">
-            <button onclick="apofasiAitisis(${a.id_diplomatikis}, 'apodoxi')">Αποδοχή</button>
-            <button class="danger" onclick="apofasiAitisis(${a.id_diplomatikis}, 'aporripsi')">Απόρριψη</button>
-          </div>
-        </section>
-      `).join('');
-    }
-    async function apofasiAitisis(idDipl, apofasi) {
-      try {
-        await apiFetch(`/api/diplomatikes/${idDipl}/apofasi`, {
-          method: 'POST',
-          headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({ apofasi })
-        });
-        showAitiseis();
-      } catch (e) { alert(e.message); }
-    }
 
-    // Proskliseis
-    async function showProskliseis() {
-      try {
-        const list = await apiFetch(`/api/didaskon/${id}/proskliseis`);
-        if (!list.length) {
-          content.innerHTML = `<section>Δεν υπάρχουν προσκλήσεις.</section>`;
-          return;
-        }
-        content.innerHTML = list.map(p => `
-          <section>
-            <h3>${escapeHtml(p.titlos)}</h3>
-            <p><strong>Φοιτητής:</strong> ${escapeHtml(p.onoma_foititi)} ${escapeHtml(p.epitheto_foititi)} — ${escapeHtml(p.email_foititi)}</p>
-            <p>Κατάσταση πρόσκλησης: <span class="kapsoula">${escapeHtml(p.katastasi)}</span></p>
-            <div class="row">
-              <button onclick="apantisiProsklisis(${p.id_prosklisis}, 'apodexti')">Αποδοχή</button>
-              <button class="danger" onclick="apantisiProsklisis(${p.id_prosklisis}, 'aporrifthi')">Απόρριψη</button>
-            </div>
-          </section>
-        `).join('');
-      } catch (e) {
-        content.innerHTML = `<section>${e.message}</section>`;
+    // synartisi gia ypologismo xronou
+    function getTimeElapsed(dateString) {
+      if (!dateString) return "—";
+      const start = new Date(dateString);
+      const now = new Date();
+      
+      const diffTime = Math.abs(now - start);
+      const totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (totalDays < 1) return "Σήμερα";
+      if (totalDays === 1) return "Εχθές";
+      if (totalDays < 30) return `${totalDays} ημέρες`;
+      
+      if (totalDays < 365) {
+          const months = Math.floor(totalDays / 30);
+          return months === 1 ? "1 μήνας" : `${months} μήνες`;
+      } 
+      
+      const years = Math.floor(totalDays / 365);
+      const remainingDays = totalDays % 365;
+      const extraMonths = Math.floor(remainingDays / 30);
+
+      let output = years === 1 ? "1 χρόνος" : `${years} χρόνια`;
+      
+      if (extraMonths > 0) {
+          output += extraMonths === 1 ? " και 1 μήνας" : ` και ${extraMonths} μήνες`;
       }
-    }
-    async function apantisiProsklisis(idProsklisis, katastasi) {
-      try {
-        await apiFetch(`/api/proskliseis/${idProsklisis}/apantisi`, {
-          method: 'POST',
-          headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({ katastasi })
-        });
-        showProskliseis();
-      } catch (e) { alert(e.message); }
+      
+      return output;
     }
 
-    // Diplomatikes
+    // katastaseis
+    function translateStatus(status) {
+        const map = {
+            'energi': 'Ενεργή',
+            'ypo_exetasi': 'Υπό Εξέταση',
+            'ypo_anathesi': 'Υπό Ανάθεση',
+            'peratomeni': 'Περατωμένη',
+            'akyromeni': 'Ακυρωμένη'
+        };
+        return map[status] || status;
+    }
+
+    // diplomatikes pou symmetexetei o didaskon
     async function showDiplomatikes() {
+      if (!id) return;
+      content.innerHTML = '<div class="card">Φόρτωση...</div>';
+
       try {
-        const list = await apiFetch(`/api/didaskon/${id}/diplwmatikes`);
-        if (!list.length) {
-          content.innerHTML = `<section>Δεν υπάρχουν διπλωματικές υπό επίβλεψη.</section>`;
-          return;
+        const list = await apiFetch(`${API_BASE}/didaskon/${id}/diplwmatikes`);
+        
+        let html = `
+            <div class="actions" style="margin-bottom: 20px;">
+                <h2 style="margin:0;">Διπλωματικές που συμμετέχετε</h2>
+            </div>
+            
+            <div class="list-container">`;
+
+        if (list.length === 0) {
+          html += `<div class="card muted" style="text-align:center;">Δεν βρέθηκαν διπλωματικές.</div>`;
+        } else {
+          list.forEach(d => {
+            const statusLabel = translateStatus(d.katastasi);
+            const elapsed = getTimeElapsed(d.hmerominia_anathesis);
+            const dateStr = d.hmerominia_anathesis ? new Date(d.hmerominia_anathesis).toLocaleDateString('el-GR') : '-';
+            const isSupervisor = (d.id_didaskonta == id);
+
+            html += `
+            <div class="list-item clickable-diplomatiki" style="display:block; padding:0; border-left: 5px solid var(--p); margin-bottom: 10px;">
+                
+                <div class="diplomatiki-header" onclick="toggleDetails(${d.id})" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                    <div class="header-main" style="text-align:left;">
+                        <span class="diplomatiki-title" style="font-weight:bold; font-size:1.1em; color:var(--p);">${d.titlos}</span>
+                    </div>
+                    <span class="status-pill status-${d.katastasi}">${statusLabel}</span>
+                </div>
+
+                <div id="details-${d.id}" class="diplomatiki-details" style="display: none; padding: 0 15px 15px 15px; text-align: left; border-top: 1px solid #eee;">
+                    
+                    <div style="margin-top: 15px; display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                        <div>
+                            <p style="margin:5px 0;"><strong>👨‍🎓 Φοιτητής:</strong> ${d.foititis_onoma} ${d.foititis_epitheto}</p>
+                            <p class="muted" style="margin:0 0 5px 0;">${d.foititis_email}</p>
+                            <p style="margin:5px 0;"><strong>👥 Επιτροπή:</strong> ${d.trimelis_epitropi || 'Δεν ορίστηκε ακόμη'}</p>
+                        </div>
+                        <div>
+                            <p style="margin:5px 0;"><strong>📅 Ημ. Ανάθεσης:</strong> ${dateStr}</p>
+                            <p style="margin:5px 0;"><strong>⏱️ Χρόνος Υλοποίησης:</strong> ${elapsed}</p>
+                        </div>
+                    </div>
+
+                    ${d.katastasi === 'ypo_exetasi' ? `
+                        <div id="grades-container-${d.id}" style="background:#fefce8; padding:15px; margin-top:15px; border-radius:8px; border:1px solid #fde047;">
+                            <p>⏳ Φόρτωση βαθμολογιών...</p>
+                        </div>
+                    ` : ''}
+
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 15px; gap: 20px;">
+                        
+                        <div style="flex: 1;">
+                            
+                            ${d.katastasi === 'peratomeni' ? `
+                                <div style="background:#f0fdf4; padding:10px; border-radius:8px; border:1px solid #bbf7d0;">
+                                    <p style="margin:0; color:#166534;">
+                                        <strong>Τελικός Βαθμός:</strong> ${d.final_bathmos || '-'}
+                                    </p>
+                                    <div style="margin-top:10px; display:flex; gap:10px;">
+                                         ${d.praktiko_link ? `<a href="${d.praktiko_link}" target="_blank" class="button small">📄 Πρακτικό</a>` : ''}
+                                         ${d.nimertis_link ? `<a href="${d.nimertis_link}" target="_blank" class="button small alt">🔗 Νημερτής</a>` : ''}
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            ${ (isSupervisor && d.katastasi === 'energi') ? `
+                                <div style="background:#f0fdf4; padding:10px; border-radius:8px; border:1px solid #bbf7d0; text-align:center;">
+                                    <button class="button success" style="width:100%; height:auto; padding: 10px;" onclick="setToYpoExetasi(${d.id})">
+                                        Αλλαγή κατάστασης<br>
+                                        <span style="font-weight:bold; font-size:1.1em;">Υπό-Εξέταση</span>
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div style="flex: 1; display:flex; justify-content: flex-end;">
+                             ${ (isSupervisor && (d.katastasi === 'ypo_anathesi' || d.katastasi === 'energi')) ? `
+                                <div style="background:#fef2f2; padding:10px; border-radius:8px; border:1px solid #fecaca; width:100%; text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
+                                    <button class="button danger small" style="width:100%; height:auto; padding: 10px;" onclick="akyrwshAnathesis(${d.id})">Ακύρωση Ανάθεσης</button>
+                                </div>
+                            ` : '' }
+                        </div>
+
+                    </div>
+                </div>
+            </div>`;
+          });
         }
-        content.innerHTML = list.map(d => `
-          <section>
-            <h3>${escapeHtml(d.titlos)}</h3>
-            <p><strong>Φοιτητής:</strong> ${escapeHtml(d.onoma)} ${escapeHtml(d.epitheto)} — ${escapeHtml(d.email)}</p>
-            <p>Κατάσταση: <span class="kapsoula">${escapeHtml(d.katastasi)}</span></p>
-            <p>Ημερ. Ανάθεσης: ${d.hmerominia_anathesis || '-'}</p>
-            <p>Τελικός βαθμός: <strong>${d.final_bathmos ?? '-'}</strong></p>
-            <p>Πρακτικό: ${d.praktiko_link ? `<a href="${d.praktiko_link}" target="_blank">Άνοιγμα</a>` : '-'}</p>
-            <p>Σύνδεσμος Νημερτής: ${d.nimertis_link ? `<a href="${escapeHtml(d.nimertis_link)}" target="_blank">Άνοιγμα</a>` : '-'}</p>
-          </section>
-        `).join('');
+        
+        // koumpia eksagogis listas diplomatikwvn
+        if (list.length > 0) {
+        html += `
+        <div class="sep"></div>
+        <div class="card" style="margin-top: 20px; background: #f9fafb;">
+            <h3>Εξαγωγή λίστας</h3>
+            <div class="row" style="justify-content: center; gap: 15px;">
+                <button id="btnDiplomatikesCSV" class="button">Εξαγωγή σε CSV</button>
+                <button id="btnDiplomatikesJSON" class="button alt">Εξαγωγή σε JSON</button>
+            </div>
+        </div>`;
+    }
+
+    html += `</div>`;
+    content.innerHTML = html;
+
+        // fortwsh bathmwn
+        list.forEach(d => {
+            if (d.katastasi === 'ypo_exetasi') {
+                fortwshBathmwn(d.id);
+            }
+        });
+        
+        if (list.length > 0) {
+        const downloadFile = (content, fileName, contentType) => {
+            const a = document.createElement("a");
+            const file = new Blob([content], { type: contentType });
+            a.href = URL.createObjectURL(file);
+            a.download = fileName;
+            a.click();
+        };
+
+        document.getElementById('btnDiplomatikesJSON').onclick = () => {
+            const jsonContent = JSON.stringify(list, null, 2);
+            downloadFile(jsonContent, 'diplomatikes_list.json', 'application/json');
+        };
+
+        document.getElementById('btnDiplomatikesCSV').onclick = () => {
+            const headers = Object.keys(list[0]);
+            const csvRows = [headers.join(',')];
+            list.forEach(row => {
+                csvRows.push(headers.map(h => `"${String(row[h] || '').replace(/"/g, '""')}"`).join(','));
+            });
+            downloadFile('\uFEFF' + csvRows.join('\n'), 'diplomatikes_list.csv', 'text/csv;charset=utf-8;');
+        };
+    }
+
       } catch (e) {
-        content.innerHTML = `<section>${e.message}</section>`;
+        content.innerHTML = `<div class="card error">${e.message}</div>`;
       }
     }
 
-    // Epitropes
-    async function showEpitropes() {
-      try {
-        const list = await apiFetch(`/api/didaskon/${id}/epitropes`);
-        if (!list.length) {
-          content.innerHTML = `<section>Δεν συμμετέχετε σε τριμελείς επιτροπές.</section>`;
-          return;
+    // allagh katastashs se ypo-exetasi
+    async function setToYpoExetasi(diplomatikiId) {
+        try {
+            await fetch(`${API_BASE}/didaskon/set_ypo_exetasi`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    id_diplomatikis: diplomatikiId, 
+                    id_didaskonta: id 
+                })
+            }).then(async res => {
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Σφάλμα.');
+            });
+
+            showToast('Η κατάσταση άλλαξε σε Υπό Εξέταση.', 'success');
+            showDiplomatikes();
+        } catch (err) {
+            showToast(err.message, 'error');
         }
-        content.innerHTML = list.map(d => `
-          <section>
-            <h3>${escapeHtml(d.titlos)}</h3>
-            <p><strong>Φοιτητής:</strong> ${escapeHtml(d.onoma)} ${escapeHtml(d.epitheto)} — ${escapeHtml(d.email)}</p>
-            <p>Κατάσταση: <span class="kapsoula">${escapeHtml(d.katastasi)}</span></p>
-            <label>Βαθμός (0–10)</label>
-            <input id="g_${d.id_diplomatikis}" type="number" min="0" max="10" step="0.1" />
-            <label>Αναλυτική κρίση</label>
-            <textarea id="k_${d.id_diplomatikis}"></textarea>
-            <div class="row">
-              <button onclick="submitVathmos(${d.id_diplomatikis})">Καταχώρηση Βαθμού</button>
-            </div>
-          </section>
-        `).join('');
-      } catch (e) {
-        content.innerHTML = `<section>${e.message}</section>`;
-      }
     }
-    async function submitVathmos(idDipl) {
-      const v = Number(document.getElementById(`g_${idDipl}`).value);
-      const k = document.getElementById(`k_${idDipl}`).value.trim();
-      if (Number.isNaN(v)) return alert('Δώστε αριθμητικό βαθμό.');
-      if (v < 0 || v > 10) return alert('Ο βαθμός πρέπει να είναι 0–10.');
-      try {
-        await apiFetch(`/api/diplomatikes/${idDipl}/vathmos`, {
-          method: 'POST',
-          headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({ id_didaskonta: id, bathmos: v, kritiki: k })
-        });
-        alert('Η βαθμολογία καταχωρήθηκε.');
-      } catch (e) { alert(e.message); }
+
+    // fortwsh bathmwn
+    async function fortwshBathmwn(diplomatikiId) {
+        const container = document.getElementById(`grades-container-${diplomatikiId}`);
+        if (!container) return;
+
+        try {
+            const members = await apiFetch(`${API_BASE}/diplomatiki/${diplomatikiId}/vathmologia`);
+            
+            let html = `
+                <h4 style="margin-top:0;">Βαθμολόγηση Τριμελούς Επιτροπής</h4>
+                <table style="width:100%; border-collapse: collapse; background: white; font-size:0.9em;">
+                    <tr style="background:#eee; text-align:left;">
+                        <th style="padding:5px;">Μέλος</th>
+                        <th style="padding:5px;">Ρόλος</th>
+                        <th style="padding:5px;">Βαθμός</th>
+                        <th style="padding:5px;">Ενέργεια</th>
+                    </tr>
+            `;
+
+            members.forEach(m => {
+                const isMe = (m.id_melous == id);
+                
+                // deixe bathmous alliws -
+                const gradeText = m.epidosi !== null ? `<strong>${m.epidosi}</strong>` : '<span class="muted">-</span>';
+                
+                // eggrafh apo didaskonta an bathmos kenos
+                const showInput = isMe && m.epidosi === null; 
+
+                html += `
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:8px;">${m.epitheto} ${m.onoma}</td>
+                        <td style="padding:8px;">${m.rolos === 'epivlepontas' ? 'Επιβλέπων' : 'Μέλος'}</td>
+                        
+                        <td style="padding:8px;">${showInput ? '-' : gradeText}</td>
+                        
+                        <td style="padding:8px;">
+                            ${showInput ? `
+                                <div style="display:flex; gap:5px;">
+                                    <input type="number" id="grade-input-${diplomatikiId}" min="0" max="10" step="0.5" style="width:60px; padding:5px;" placeholder="0-10">
+                                    <button class="button small success" onclick="apothikeyshBathmou(${diplomatikiId})">💾</button>
+                                </div>
+                            ` : (isMe ? 'Καταχωρήθηκε' : '')} 
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `</table>`;
+            container.innerHTML = html;
+
+        } catch (err) {
+            container.innerHTML = `<span class="error">Σφάλμα φόρτωσης βαθμών.</span>`;
+        }
     }
+
+    // apothikeysh telikou bathmou
+    async function apothikeyshBathmou(diplomatikiId) {
+        const input = document.getElementById(`grade-input-${diplomatikiId}`);
+        const vathmos = input.value;
+
+        if (vathmos === '' || vathmos < 0 || vathmos > 10) {
+            return showToast('Παρακαλώ εισάγετε έγκυρο βαθμό (0-10).', 'error');
+        }
+
+        try {
+            await fetch(`${API_BASE}/diplomatiki/vathmologia`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    id_diplomatikis: diplomatikiId, 
+                    id_didaskonta: id,
+                    vathmos: vathmos
+                })
+            }).then(async res => {
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Σφάλμα.');
+                
+                showToast(data.message, 'success');
+
+                // an diplomatiki peratomeni kanei refresh
+                if (data.diplomatiki_peratomeni) {
+                    showDiplomatikes(); 
+                } else {
+                    // alliws fortwnei bathmo didaskonta
+                    fortwshBathmwn(diplomatikiId);
+                }
+            });
+
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    // akyrwsh anathesis
+    async function akyrwshAnathesis(diplomatikiId) {
+        try {
+            await fetch(`${API_BASE}/didaskon/akyrosi_anathesis`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    id_diplomatikis: diplomatikiId, 
+                    id_didaskonta: id 
+                })
+            }).then(async res => {
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Σφάλμα ακύρωσης.');
+            });
+
+            showToast('Η ανάθεση ακυρώθηκε επιτυχώς.', 'success');
+            showDiplomatikes(); // Refresh list to see change
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
     //Synartisi arxikopoihshs selidas didaskonta pou kalei to index
-function initDidaskonPage(username) {
-    document.getElementById('btnThemata').onclick = showThemata;
-    document.getElementById('btnAitiseis').onclick = showAitiseis;
-    document.getElementById('btnProskliseis').onclick = showProskliseis;
-    document.getElementById('btnDiplomatikes').onclick = showDiplomatikes;
-    document.getElementById('btnEpitropes').onclick = showEpitropes;
+    function initDidaskonPage(username) {
+    const btnThemata = document.getElementById('btnThemata');
+    if (btnThemata) btnThemata.onclick = showThemata;
+
+    const btnProskliseis = document.getElementById('btnProskliseis');
+    if (btnProskliseis) btnProskliseis.onclick = showProskliseis;
+
+    const btnDiplomatikes = document.getElementById('btnDiplomatikes');
+    if (btnDiplomatikes) btnDiplomatikes.onclick = showDiplomatikes;
+
+    const btnAnathesi = document.getElementById('btnAnathesi');
+    if (btnAnathesi) btnAnathesi.onclick = showAnathesiPage;
+
     const span = document.getElementById('who');
-    if (span) {
+    if (span && username) {
         span.textContent = username;
     }
   }
+
+    window.toggleDetails = toggleDetails;
+    window.akyrwshAnathesis = akyrwshAnathesis;
+    window.apothikeyshBathmou = apothikeyshBathmou;
+    window.setToYpoExetasi = setToYpoExetasi;
+    window.initDidaskonPage = initDidaskonPage;
 }
-  </script>
+</script>
 </body>
 </html>
