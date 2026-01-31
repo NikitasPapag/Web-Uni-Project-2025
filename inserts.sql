@@ -1,27 +1,31 @@
 USE diplomatikes_db;
 
--- 1. Εισαγωγή 20 Φοιτητών
+-- ==========================================================
+-- 1. ΕΙΣΑΓΩΓΗ ΧΡΗΣΤΩΝ (USERS)
+-- ==========================================================
+
+-- 1a. Εισαγωγή 20 Φοιτητών
 INSERT INTO xristes (onoma, epitheto, email, password, rolos) VALUES
-('Αλέξανδρος', 'Παπαδόπουλος', 'alexandros.p@example.com', 'password123', 'foititis'),
-('Ελένη', 'Βασιλείου', 'eleni.v@example.com', 'password123', 'foititis'),
-('Νικόλαος', 'Γεωργίου', 'nikolaos.g@example.com', 'password123', 'foititis'),
-('Μαρία', 'Δημητρίου', 'maria.d@example.com', 'password123', 'foititis'),
-('Γεώργιος', 'Ευαγγέλου', 'georgios.e@example.com', 'password123', 'foititis'),
-('Αικατερίνη', 'Ζαχαρίου', 'aikaterini.z@example.com', 'password123', 'foititis'),
-('Δημήτρης', 'Θεοδώρου', 'dimitris.th@example.com', 'password123', 'foititis'),
-('Ιωάννα', 'Ιωάννου', 'ioanna.i@example.com', 'password123', 'foititis'),
-('Κωνσταντίνος', 'Καραγιάννης', 'konstantinos.k@example.com', 'password123', 'foititis'),
-('Λουκία', 'Λαμπροπούλου', 'loukia.l@example.com', 'password123', 'foititis'),
-('Μιχάλης', 'Μαρίνου', 'michalis.m@example.com', 'password123', 'foititis'),
-('Νεφέλη', 'Νικολάου', 'nefeli.n@example.com', 'password123', 'foititis'),
-('Ξένια', 'Ξανθοπούλου', 'xenia.x@example.com', 'password123', 'foititis'),
-('Οδυσσέας', 'Οικονομίδης', 'odysseas.o@example.com', 'password123', 'foititis'),
-('Πέτρος', 'Παύλου', 'petros.p@example.com', 'password123', 'foititis'),
-('Ραφαέλα', 'Ρούσσου', 'rafaela.r@example.com', 'password123', 'foititis'),
-('Στέφανος', 'Στεφάνου', 'stefanos.s@example.com', 'password123', 'foititis'),
-('Τάνια', 'Τσαλδάρη', 'tania.ts@example.com', 'password123', 'foititis'),
-('Υβόννη', 'Υφαντή', 'yvonni.y@example.com', 'password123', 'foititis'),
-('Φώτης', 'Φωτίου', 'fotis.f@example.com', 'password123', 'foititis');
+('Αλέξανδρος', 'Παπαδόπουλος', 'alexandros.p@example.com', 'password123', 'foititis'), -- d1 (Energi)
+('Ελένη', 'Βασιλείου', 'eleni.v@example.com', 'password123', 'foititis'), -- d2 (Energi)
+('Νικόλαος', 'Γεωργίου', 'nikolaos.g@example.com', 'password123', 'foititis'), -- d3 (Energi)
+('Μαρία', 'Δημητρίου', 'maria.d@example.com', 'password123', 'foititis'), -- d4 (Energi)
+('Γεώργιος', 'Ευαγγέλου', 'georgios.e@example.com', 'password123', 'foititis'), -- d5 (Energi)
+('Αικατερίνη', 'Ζαχαρίου', 'aikaterini.z@example.com', 'password123', 'foititis'), -- d6 (Ypo Exetasi - Fully Graded)
+('Δημήτρης', 'Θεοδώρου', 'dimitris.th@example.com', 'password123', 'foititis'), -- d7 (Ypo Exetasi - Partial Grades)
+('Ιωάννα', 'Ιωάννου', 'ioanna.i@example.com', 'password123', 'foititis'), -- d8 (Ypo Exetasi - No Grades)
+('Κωνσταντίνος', 'Καραγιάννης', 'konstantinos.k@example.com', 'password123', 'foititis'), -- d9 (Peratomeni)
+('Λουκία', 'Λαμπροπούλου', 'loukia.l@example.com', 'password123', 'foititis'), -- d10 (Peratomeni)
+('Μιχάλης', 'Μαρίνου', 'michalis.m@example.com', 'password123', 'foititis'), -- d11 (Akyromeni)
+('Νεφέλη', 'Νικολάου', 'nefeli.n@example.com', 'password123', 'foititis'), -- d12 (Ypo Anathesi - No Invites)
+('Ξένια', 'Ξανθοπούλου', 'xenia.x@example.com', 'password123', 'foititis'), -- d13 (Ypo Anathesi - Pending Invites)
+('Οδυσσέας', 'Οικονομίδης', 'odysseas.o@example.com', 'password123', 'foititis'), -- d14 (Ypo Anathesi - Partial Accept)
+('Πέτρος', 'Παύλου', 'petros.p@example.com', 'password123', 'foititis'), -- d15 (Ypo Anathesi - Rejected)
+('Ραφαέλα', 'Ρούσσου', 'rafaela.r@example.com', 'password123', 'foititis'), -- Free
+('Στέφανος', 'Στεφάνου', 'stefanos.s@example.com', 'password123', 'foititis'), -- Free
+('Τάνια', 'Τσαλδάρη', 'tania.ts@example.com', 'password123', 'foititis'), -- Free
+('Υβόννη', 'Υφαντή', 'yvonni.y@example.com', 'password123', 'foititis'), -- Free
+('Φώτης', 'Φωτίου', 'fotis.f@example.com', 'password123', 'foititis'); -- Free
 
 INSERT INTO foititis (id, AM, tilefono_kinhto) VALUES
 ((SELECT id FROM xristes WHERE email = 'alexandros.p@example.com'), '2020001', '6901234501'),
@@ -46,7 +50,7 @@ INSERT INTO foititis (id, AM, tilefono_kinhto) VALUES
 ((SELECT id FROM xristes WHERE email = 'fotis.f@example.com'), '2020020', '6901234520');
 
 
--- 2. Εισαγωγή 10 Διδασκόντων
+-- 1b. Εισαγωγή 10 Διδασκόντων
 INSERT INTO xristes (onoma, epitheto, email, password, rolos) VALUES
 ('Κωνσταντίνος', 'Παπαδάκης', 'k.papadakis@example.com', 'password123', 'didaskon'),
 ('Αντωνία', 'Σταυροπούλου', 'a.stavropoulou@example.com', 'password123', 'didaskon'),
@@ -72,7 +76,7 @@ INSERT INTO didaskon (id, tilefono) VALUES
 ((SELECT id FROM xristes WHERE email = 'v.pappa@example.com'), '2101000110');
 
 
--- 3. Εισαγωγή 2 Μελών Γραμματείας
+-- 1c. Εισαγωγή 2 Μελών Γραμματείας
 INSERT INTO xristes (onoma, epitheto, email, password, rolos) VALUES
 ('Ευγενία', 'Καρατζά', 'e.karatza@example.com', 'password123', 'grammateia'),
 ('Γιάννης', 'Φιλίππου', 'g.filippou@example.com', 'password123', 'grammateia');
@@ -82,44 +86,48 @@ INSERT INTO grammateia (id, tilefono) VALUES
 ((SELECT id FROM xristes WHERE email = 'g.filippou@example.com'), '2102000202');
 
 
--- IDs για εύκολη χρήση στα παρακάτω INSERTS
-SET @papadakis_id = (SELECT id FROM didaskon WHERE id = (SELECT id FROM xristes WHERE email = 'k.papadakis@example.com'));
-SET @stavropoulou_id = (SELECT id FROM didaskon WHERE id = (SELECT id FROM xristes WHERE email = 'a.stavropoulou@example.com'));
-SET @lappas_id = (SELECT id FROM didaskon WHERE id = (SELECT id FROM xristes WHERE email = 'p.lappas@example.com'));
-SET @kyriakidou_id = (SELECT id FROM didaskon WHERE id = (SELECT id FROM xristes WHERE email = 's.kyriakidou@example.com'));
-SET @michalopoulos_id = (SELECT id FROM didaskon WHERE id = (SELECT id FROM xristes WHERE email = 'ch.michalopoulos@example.com'));
-SET @konstantinou_id = (SELECT id FROM didaskon WHERE id = (SELECT id FROM xristes WHERE email = 'f.konstantinou@example.com'));
-SET @dimitriadis_id = (SELECT id FROM didaskon WHERE id = (SELECT id FROM xristes WHERE email = 'g.dimitriadis@example.com'));
-SET @petridou_id = (SELECT id FROM didaskon WHERE id = (SELECT id FROM xristes WHERE email = 'a.petridou@example.com'));
-SET @vlachos_id = (SELECT id FROM didaskon WHERE id = (SELECT id FROM xristes WHERE email = 'th.vlachos@example.com'));
-SET @pappa_id = (SELECT id FROM didaskon WHERE id = (SELECT id FROM xristes WHERE email = 'v.pappa@example.com'));
+-- ==========================================================
+-- 2. VARIABLES (Για ευκολία στα επόμενα Inserts)
+-- ==========================================================
+SET @papadakis_id = (SELECT id FROM xristes WHERE email = 'k.papadakis@example.com');
+SET @stavropoulou_id = (SELECT id FROM xristes WHERE email = 'a.stavropoulou@example.com');
+SET @lappas_id = (SELECT id FROM xristes WHERE email = 'p.lappas@example.com');
+SET @kyriakidou_id = (SELECT id FROM xristes WHERE email = 's.kyriakidou@example.com');
+SET @michalopoulos_id = (SELECT id FROM xristes WHERE email = 'ch.michalopoulos@example.com');
+SET @konstantinou_id = (SELECT id FROM xristes WHERE email = 'f.konstantinou@example.com');
+SET @dimitriadis_id = (SELECT id FROM xristes WHERE email = 'g.dimitriadis@example.com');
+SET @petridou_id = (SELECT id FROM xristes WHERE email = 'a.petridou@example.com');
+SET @vlachos_id = (SELECT id FROM xristes WHERE email = 'th.vlachos@example.com');
+SET @pappa_id = (SELECT id FROM xristes WHERE email = 'v.pappa@example.com');
 
-SET @alexandros_p_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'alexandros.p@example.com'));
-SET @eleni_v_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'eleni.v@example.com'));
-SET @nikolaos_g_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'nikolaos.g@example.com'));
-SET @maria_d_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'maria.d@example.com'));
-SET @georgios_e_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'georgios.e@example.com'));
-SET @aikaterini_z_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'aikaterini.z@example.com'));
-SET @dimitris_th_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'dimitris.th@example.com'));
-SET @ioanna_i_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'ioanna.i@example.com'));
-SET @konstantinos_k_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'konstantinos.k@example.com'));
-SET @loukia_l_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'loukia.l@example.com'));
-SET @michalis_m_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'michalis.m@example.com'));
-SET @nefeli_n_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'nefeli.n@example.com'));
-SET @xenia_x_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'xenia.x@example.com'));
-SET @odysseas_o_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'odysseas.o@example.com'));
-SET @petros_p_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'petros.p@example.com'));
-SET @rafaela_r_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'rafaela.r@example.com'));
-SET @stefanos_s_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'stefanos.s@example.com'));
-SET @tania_ts_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'tania.ts@example.com'));
-SET @yvonni_y_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'yvonni.y@example.com'));
-SET @fotis_f_id = (SELECT id FROM foititis WHERE id = (SELECT id FROM xristes WHERE email = 'fotis.f@example.com'));
+SET @alexandros_p_id = (SELECT id FROM xristes WHERE email = 'alexandros.p@example.com');
+SET @eleni_v_id = (SELECT id FROM xristes WHERE email = 'eleni.v@example.com');
+SET @nikolaos_g_id = (SELECT id FROM xristes WHERE email = 'nikolaos.g@example.com');
+SET @maria_d_id = (SELECT id FROM xristes WHERE email = 'maria.d@example.com');
+SET @georgios_e_id = (SELECT id FROM xristes WHERE email = 'georgios.e@example.com');
+SET @aikaterini_z_id = (SELECT id FROM xristes WHERE email = 'aikaterini.z@example.com');
+SET @dimitris_th_id = (SELECT id FROM xristes WHERE email = 'dimitris.th@example.com');
+SET @ioanna_i_id = (SELECT id FROM xristes WHERE email = 'ioanna.i@example.com');
+SET @konstantinos_k_id = (SELECT id FROM xristes WHERE email = 'konstantinos.k@example.com');
+SET @loukia_l_id = (SELECT id FROM xristes WHERE email = 'loukia.l@example.com');
+SET @michalis_m_id = (SELECT id FROM xristes WHERE email = 'michalis.m@example.com');
+SET @nefeli_n_id = (SELECT id FROM xristes WHERE email = 'nefeli.n@example.com');
+SET @xenia_x_id = (SELECT id FROM xristes WHERE email = 'xenia.x@example.com');
+SET @odysseas_o_id = (SELECT id FROM xristes WHERE email = 'odysseas.o@example.com');
+SET @petros_p_id = (SELECT id FROM xristes WHERE email = 'petros.p@example.com');
+SET @rafaela_r_id = (SELECT id FROM xristes WHERE email = 'rafaela.r@example.com');
+SET @stefanos_s_id = (SELECT id FROM xristes WHERE email = 'stefanos.s@example.com');
+SET @tania_ts_id = (SELECT id FROM xristes WHERE email = 'tania.ts@example.com');
+SET @yvonni_y_id = (SELECT id FROM xristes WHERE email = 'yvonni.y@example.com');
+SET @fotis_f_id = (SELECT id FROM xristes WHERE email = 'fotis.f@example.com');
 
-SET @karatza_id = (SELECT id FROM grammateia WHERE id = (SELECT id FROM xristes WHERE email = 'e.karatza@example.com'));
-SET @filippou_id = (SELECT id FROM grammateia WHERE id = (SELECT id FROM xristes WHERE email = 'g.filippou@example.com'));
+SET @karatza_id = (SELECT id FROM xristes WHERE email = 'e.karatza@example.com');
+SET @filippou_id = (SELECT id FROM xristes WHERE email = 'g.filippou@example.com');
 
 
--- 4. Εισαγωγή Θεμάτων (περίπου 15-20 θέματα)
+-- ==========================================================
+-- 3. ΕΙΣΑΓΩΓΗ ΘΕΜΑΤΩΝ
+-- ==========================================================
 INSERT INTO themata (titlos, perigrafi, id_didaskonta) VALUES
 ('Ανάπτυξη Εφαρμογών Κινητών με React Native', 'Εκπόνηση εφαρμογής για iOS/Android.', @papadakis_id), -- t1
 ('Μηχανική Μάθηση στην Υγεία', 'Εφαρμογές ML σε ιατρικά δεδομένα.', @stavropoulou_id), -- t2
@@ -143,9 +151,11 @@ INSERT INTO themata (titlos, perigrafi, id_didaskonta) VALUES
 ('Συστήματα Υποστήριξης Αποφάσεων', 'Ανάπτυξη DSS για επιχειρηματικά προβλήματα.', @pappa_id); -- t20
 
 
--- 5. Αναθέσεις και Καταστάσεις Διπλωματικών Εργασιών (ώστε να καλύπτονται όλες οι περιπτώσεις)
+-- ==========================================================
+-- 4. ΔΗΜΙΟΥΡΓΙΑ ΔΙΠΛΩΜΑΤΙΚΩΝ (SCENARIOS)
+-- ==========================================================
 
--- Διπλωματικές με Κατάσταση: 'energi'
+-- A. Active Phase (Energi) - Committee Formed, No Files
 INSERT INTO diplomatikes (id_thematos, id_foititi, katastasi, hmerominia_anathesis) VALUES
 ((SELECT id FROM themata WHERE titlos = 'Ανάπτυξη Εφαρμογών Κινητών με React Native'), @alexandros_p_id, 'energi', '2024-11-15'), -- d1
 ((SELECT id FROM themata WHERE titlos = 'Μηχανική Μάθηση στην Υγεία'), @eleni_v_id, 'energi', '2024-11-20'), -- d2
@@ -153,117 +163,120 @@ INSERT INTO diplomatikes (id_thematos, id_foititi, katastasi, hmerominia_anathes
 ((SELECT id FROM themata WHERE titlos = 'Εξόρυξη Γνώσης από Μεγάλα Δεδομένα'), @maria_d_id, 'energi', '2024-12-01'), -- d4
 ((SELECT id FROM themata WHERE titlos = 'Ανάπτυξη Web Services με RESTful API'), @georgios_e_id, 'energi', '2024-12-05'); -- d5
 
--- Διπλωματικές με Κατάσταση: 'ypo_exetasi'
+-- B. Examination Phase (Ypo Exetasi) - Various Grading States
 INSERT INTO diplomatikes (id_thematos, id_foititi, katastasi, hmerominia_anathesis, praktiko_link) VALUES
-((SELECT id FROM themata WHERE titlos = 'Εικονική Πραγματικότητα στην Εκπαίδευση'), @aikaterini_z_id, 'ypo_exetasi', '2024-03-10', 'http://example.com/praktiko_aikaterini_z.pdf'), -- d6
-((SELECT id FROM themata WHERE titlos = 'Επεξεργασία Φυσικής Γλώσσας (NLP) σε Ελληνικά'), @dimitris_th_id, 'ypo_exetasi', '2024-03-15', 'http://example.com/praktiko_dimitris_th.pdf'), -- d7
-((SELECT id FROM themata WHERE titlos = 'Blockchain Technologies και Cryptocurrencies'), @ioanna_i_id, 'ypo_exetasi', '2024-03-20', 'http://example.com/praktiko_ioanna_i.pdf'); -- d8
+((SELECT id FROM themata WHERE titlos = 'Εικονική Πραγματικότητα στην Εκπαίδευση'), @aikaterini_z_id, 'ypo_exetasi', '2024-03-10', 'http://example.com/praktiko_aikaterini.pdf'), -- d6 (Full Grades)
+((SELECT id FROM themata WHERE titlos = 'Επεξεργασία Φυσικής Γλώσσας (NLP) σε Ελληνικά'), @dimitris_th_id, 'ypo_exetasi', '2024-03-15', 'http://example.com/praktiko_dimitris.pdf'), -- d7 (Partial Grades)
+((SELECT id FROM themata WHERE titlos = 'Blockchain Technologies και Cryptocurrencies'), @ioanna_i_id, 'ypo_exetasi', '2024-03-20', 'http://example.com/praktiko_ioanna.pdf'); -- d8 (No Grades)
 
--- Διπλωματικές με Κατάσταση: 'peratomeni'
+-- C. Completed Phase (Peratomeni)
 INSERT INTO diplomatikes (id_thematos, id_foititi, katastasi, hmerominia_anathesis, praktiko_link, nimertis_link, final_bathmos, hmerominia_katathesis_bathmou_grammateia, id_grammateias_pou_dexthike_bathmo) VALUES
-((SELECT id FROM themata WHERE titlos = 'Cloud Computing και DevOps Πρακτικές'), @konstantinos_k_id, 'peratomeni', '2023-09-01', 'http://example.com/praktiko_konstantinos_k.pdf', 'http://nimertis.gr/thesis/konstantinos_k', 8.5, '2024-07-01', @karatza_id), -- d9
-((SELECT id FROM themata WHERE titlos = 'Internet of Things (IoT) στην Έξυπνη Πόλη'), @loukia_l_id, 'peratomeni', '2023-09-05', 'http://example.com/praktiko_loukia_l.pdf', 'http://nimertis.gr/thesis/loukia_l', 9.0, '2024-07-05', @filippou_id); -- d10
+((SELECT id FROM themata WHERE titlos = 'Cloud Computing και DevOps Πρακτικές'), @konstantinos_k_id, 'peratomeni', '2023-09-01', 'http://example.com/praktiko_konstantinos.pdf', 'http://nimertis.gr/thesis/konstantinos', 8.5, '2024-07-01', @karatza_id), -- d9
+((SELECT id FROM themata WHERE titlos = 'Internet of Things (IoT) στην Έξυπνη Πόλη'), @loukia_l_id, 'peratomeni', '2023-09-05', 'http://example.com/praktiko_loukia.pdf', 'http://nimertis.gr/thesis/loukia', 9.0, '2024-07-05', @filippou_id); -- d10
 
--- Διπλωματικές με Κατάσταση: 'akyromeni'
+-- D. Cancelled Phase (Akyromeni)
 INSERT INTO diplomatikes (id_thematos, id_foititi, katastasi, hmerominia_anathesis, hmerominia_akyrwshs, arithmos_protokollou_akyrwshs, etos_genikis_syneleusis_akyrwshs, logos_akyrwshs, id_grammateias_pou_akyrwse) VALUES
 ((SELECT id FROM themata WHERE titlos = 'Ανάλυση Δεδομένων με Python και Pandas'), @michalis_m_id, 'akyromeni', '2024-01-10', '2024-06-20', 'ΓΣ123/2024', 2024, 'Κατόπιν αίτησης φοιτητή', @karatza_id); -- d11
 
--- Διπλωματικές με Κατάσταση: 'ypo_anathesi' (θέμα χωρίς ανάθεση σε φοιτητή, αλλά για φοιτητή που ψάχνει)
--- Αυτές δεν εισάγονται στον πίνακα diplomatikes, καθώς είναι "θέματα" που περιμένουν να ανατεθούν.
--- Τα θέματα 12-20 είναι αυτής της κατηγορίας από τον πίνακα themata.
-
--- Άλλες ενεργές διπλωματικές
+-- E. Assignment Phase (Ypo Anathesi) - Various Invitation States
 INSERT INTO diplomatikes (id_thematos, id_foititi, katastasi, hmerominia_anathesis) VALUES
-((SELECT id FROM themata WHERE titlos = 'Βελτιστοποίηση Αλγορίθμων με Γενετικούς Αλγορίθμους'), @nefeli_n_id, 'energi', '2024-12-10'), -- d12
-((SELECT id FROM themata WHERE titlos = 'Κρυπτογραφία και Κβαντικοί Υπολογιστές'), @xenia_x_id, 'energi', '2025-01-15'), -- d13
-((SELECT id FROM themata WHERE titlos = 'Διαχείριση Βάσεων Δεδομένων NoSQL'), @odysseas_o_id, 'energi', '2025-02-01'), -- d14
-((SELECT id FROM themata WHERE titlos = 'Mobile Game Development με Unity'), @petros_p_id, 'energi', '2025-02-10'); -- d15
+((SELECT id FROM themata WHERE titlos = 'Βελτιστοποίηση Αλγορίθμων με Γενετικούς Αλγορίθμους'), @nefeli_n_id, 'ypo_anathesi', '2024-12-10'), -- d12 (No Invites)
+((SELECT id FROM themata WHERE titlos = 'Κρυπτογραφία και Κβαντικοί Υπολογιστές'), @xenia_x_id, 'ypo_anathesi', '2025-01-15'), -- d13 (Pending Invites)
+((SELECT id FROM themata WHERE titlos = 'Διαχείριση Βάσεων Δεδομένων NoSQL'), @odysseas_o_id, 'ypo_anathesi', '2025-02-01'), -- d14 (Partial Accept)
+((SELECT id FROM themata WHERE titlos = 'Mobile Game Development με Unity'), @petros_p_id, 'ypo_anathesi', '2025-02-10'); -- d15 (Rejected)
 
 
--- 6. Εισαγωγή Δεδομένων στον πίνακα aitiseis_analipsis (μόνο για διπλωματικές σε 'energi' και 'peratomeni' κατάσταση)
+-- ==========================================================
+-- 5. ΣΥΝΔΕΣΗ ΜΕ ΑΙΤΗΣΕΙΣ ΑΝΑΛΗΨΗΣ
+-- ==========================================================
 INSERT INTO aitiseis_analipsis (id_diplomatikis, hmerominia_katathesis, id_grammateias, arxeio_aitisis, arithmos_protokollou_egkrisis, etos_genikis_syneleusis_egkrisis) VALUES
-((SELECT id FROM diplomatikes WHERE id_foititi = @alexandros_p_id), '2024-11-18', @karatza_id, 'aitisi_alexandros_p.pdf', 'ΓΣ001/2024', 2024),
-((SELECT id FROM diplomatikes WHERE id_foititi = @eleni_v_id), '2024-11-22', @filippou_id, 'aitisi_eleni_v.pdf', 'ΓΣ002/2024', 2024),
-((SELECT id FROM diplomatikes WHERE id_foititi = @nikolaos_g_id), '2024-11-28', @karatza_id, 'aitisi_nikolaos_g.pdf', 'ΓΣ003/2024', 2024),
-((SELECT id FROM diplomatikes WHERE id_foititi = @maria_d_id), '2024-12-03', @filippou_id, 'aitisi_maria_d.pdf', 'ΓΣ004/2024', 2024),
-((SELECT id FROM diplomatikes WHERE id_foititi = @georgios_e_id), '2024-12-07', @karatza_id, 'aitisi_georgios_e.pdf', 'ΓΣ005/2024', 2024),
-((SELECT id FROM diplomatikes WHERE id_foititi = @konstantinos_k_id), '2023-09-03', @karatza_id, 'aitisi_konstantinos_k.pdf', 'ΓΣ010/2023', 2023), -- Περατωμένη
-((SELECT id FROM diplomatikes WHERE id_foititi = @loukia_l_id), '2023-09-07', @filippou_id, 'aitisi_loukia_l.pdf', 'ΓΣ011/2023', 2023), -- Περατωμένη
-((SELECT id FROM diplomatikes WHERE id_foititi = @nefeli_n_id), '2024-12-12', @filippou_id, 'aitisi_nefeli_n.pdf', 'ΓΣ006/2024', 2024),
-((SELECT id FROM diplomatikes WHERE id_foititi = @xenia_x_id), '2025-01-18', @karatza_id, 'aitisi_xenia_x.pdf', 'ΓΣ007/2025', 2025),
-((SELECT id FROM diplomatikes WHERE id_foititi = @odysseas_o_id), '2025-02-03', @filippou_id, 'aitisi_odysseas_o.pdf', 'ΓΣ008/2025', 2025),
-((SELECT id FROM diplomatikes WHERE id_foititi = @petros_p_id), '2025-02-12', @karatza_id, 'aitisi_petros_p.pdf', 'ΓΣ009/2025', 2025);
+((SELECT id FROM diplomatikes WHERE id_foititi = @alexandros_p_id), '2024-11-18', @karatza_id, 'aitisi_alexandros.pdf', 'ΓΣ001/2024', 2024),
+((SELECT id FROM diplomatikes WHERE id_foititi = @eleni_v_id), '2024-11-22', @filippou_id, 'aitisi_eleni.pdf', 'ΓΣ002/2024', 2024),
+((SELECT id FROM diplomatikes WHERE id_foititi = @nikolaos_g_id), '2024-11-28', @karatza_id, 'aitisi_nikolaos.pdf', 'ΓΣ003/2024', 2024),
+((SELECT id FROM diplomatikes WHERE id_foititi = @maria_d_id), '2024-12-03', @filippou_id, 'aitisi_maria.pdf', 'ΓΣ004/2024', 2024),
+((SELECT id FROM diplomatikes WHERE id_foititi = @georgios_e_id), '2024-12-07', @karatza_id, 'aitisi_georgios.pdf', 'ΓΣ005/2024', 2024),
+((SELECT id FROM diplomatikes WHERE id_foititi = @aikaterini_z_id), '2024-03-12', @filippou_id, 'aitisi_aikaterini.pdf', 'ΓΣ050/2024', 2024),
+((SELECT id FROM diplomatikes WHERE id_foititi = @dimitris_th_id), '2024-03-18', @karatza_id, 'aitisi_dimitris.pdf', 'ΓΣ051/2024', 2024),
+((SELECT id FROM diplomatikes WHERE id_foititi = @ioanna_i_id), '2024-03-22', @filippou_id, 'aitisi_ioanna.pdf', 'ΓΣ052/2024', 2024),
+((SELECT id FROM diplomatikes WHERE id_foititi = @konstantinos_k_id), '2023-09-03', @karatza_id, 'aitisi_konstantinos.pdf', 'ΓΣ010/2023', 2023),
+((SELECT id FROM diplomatikes WHERE id_foititi = @loukia_l_id), '2023-09-07', @filippou_id, 'aitisi_loukia.pdf', 'ΓΣ011/2023', 2023);
 
 
--- 7. Εισαγωγή Δεδομένων στον πίνακα trimeloys (Επιτροπές)
+-- ==========================================================
+-- 6. ΕΙΣΑΓΩΓΗ ΤΡΙΜΕΛΩΝ ΕΠΙΤΡΟΠΩΝ (Μόνο για Energi, Exetasi, Peratomeni)
+-- ==========================================================
+
+-- d1: Active (Energi)
 INSERT INTO trimeloys (id_diplomatikis, id_melous, rolos, epidosi) VALUES
--- d1: Αλέξανδρος Παπαδόπουλος, Επιβλέπων: Παπαδάκης
 ((SELECT id FROM diplomatikes WHERE id_foititi = @alexandros_p_id), @papadakis_id, 'epivlepontas', NULL),
 ((SELECT id FROM diplomatikes WHERE id_foititi = @alexandros_p_id), @stavropoulou_id, 'melos', NULL),
-((SELECT id FROM diplomatikes WHERE id_foititi = @alexandros_p_id), @lappas_id, 'melos', NULL),
+((SELECT id FROM diplomatikes WHERE id_foititi = @alexandros_p_id), @lappas_id, 'melos', NULL);
 
--- d2: Ελένη Βασιλείου, Επιβλέπων: Σταυροπούλου
-((SELECT id FROM diplomatikes WHERE id_foititi = @eleni_v_id), @stavropoulou_id, 'epivlepontas', NULL),
-((SELECT id FROM diplomatikes WHERE id_foititi = @eleni_v_id), @kyriakidou_id, 'melos', NULL),
-((SELECT id FROM diplomatikes WHERE id_foititi = @eleni_v_id), @michalopoulos_id, 'melos', NULL),
+-- d6: Ypo Exetasi (Fully Graded, Status not changed by API but Grades exist)
+INSERT INTO trimeloys (id_diplomatikis, id_melous, rolos, epidosi) VALUES
+((SELECT id FROM diplomatikes WHERE id_foititi = @aikaterini_z_id), @konstantinou_id, 'epivlepontas', 8.0),
+((SELECT id FROM diplomatikes WHERE id_foititi = @aikaterini_z_id), @petridou_id, 'melos', 7.5),
+((SELECT id FROM diplomatikes WHERE id_foititi = @aikaterini_z_id), @vlachos_id, 'melos', 8.5);
+-- Final grade for d6 should be (8+7.5+8.5)/3 = 8.0. Insert into diplomatikes too.
+UPDATE diplomatikes SET final_bathmos = 8.0 WHERE id_foititi = @aikaterini_z_id;
 
--- d3: Νικόλαος Γεωργίου, Επιβλέπων: Λάππας
-((SELECT id FROM diplomatikes WHERE id_foititi = @nikolaos_g_id), @lappas_id, 'epivlepontas', NULL),
-((SELECT id FROM diplomatikes WHERE id_foititi = @nikolaos_g_id), @konstantinou_id, 'melos', NULL),
-((SELECT id FROM diplomatikes WHERE id_foititi = @nikolaos_g_id), @dimitriadis_id, 'melos', NULL),
+-- d7: Ypo Exetasi (Partial Grades)
+INSERT INTO trimeloys (id_diplomatikis, id_melous, rolos, epidosi) VALUES
+((SELECT id FROM diplomatikes WHERE id_foititi = @dimitris_th_id), @dimitriadis_id, 'epivlepontas', 9.0),
+((SELECT id FROM diplomatikes WHERE id_foititi = @dimitris_th_id), @pappa_id, 'melos', NULL), -- Not graded yet
+((SELECT id FROM diplomatikes WHERE id_foititi = @dimitris_th_id), @stavropoulou_id, 'melos', 9.5);
 
--- d6: Αικατερίνη Ζαχαρίου (Υπό Εξέταση), Επιβλέπων: Κωνσταντίνου
-((SELECT id FROM diplomatikes WHERE id_foititi = @aikaterini_z_id), @konstantinou_id, 'epivlepontas', 7.5),
-((SELECT id FROM diplomatikes WHERE id_foititi = @aikaterini_z_id), @petridou_id, 'melos', 8.0),
-((SELECT id FROM diplomatikes WHERE id_foititi = @aikaterini_z_id), @vlachos_id, 'melos', 7.0),
+-- d8: Ypo Exetasi (No Grades)
+INSERT INTO trimeloys (id_diplomatikis, id_melous, rolos, epidosi) VALUES
+((SELECT id FROM diplomatikes WHERE id_foititi = @ioanna_i_id), @petridou_id, 'epivlepontas', NULL),
+((SELECT id FROM diplomatikes WHERE id_foititi = @ioanna_i_id), @michalopoulos_id, 'melos', NULL),
+((SELECT id FROM diplomatikes WHERE id_foititi = @ioanna_i_id), @lappas_id, 'melos', NULL);
 
--- d9: Κωνσταντίνος Καραγιάννης (Περατωμένη), Επιβλέπων: Βλάχος
+-- d9: Peratomeni (Graded)
+INSERT INTO trimeloys (id_diplomatikis, id_melous, rolos, epidosi) VALUES
 ((SELECT id FROM diplomatikes WHERE id_foititi = @konstantinos_k_id), @vlachos_id, 'epivlepontas', 8.5),
 ((SELECT id FROM diplomatikes WHERE id_foititi = @konstantinos_k_id), @papadakis_id, 'melos', 8.0),
 ((SELECT id FROM diplomatikes WHERE id_foititi = @konstantinos_k_id), @stavropoulou_id, 'melos', 9.0);
 
 
--- 8. Εισαγωγή Δεδομένων στον πίνακα anakoinoseis (για διπλωματικές 'Υπό Εξέταση')
+-- ==========================================================
+-- 7. ΕΙΣΑΓΩΓΗ ΠΡΟΣΚΛΗΣΕΩΝ (Για Ypo Anathesi)
+-- ==========================================================
+
+-- d12: No Invites Sent (Empty)
+
+-- d13: Pending Invites
+INSERT INTO proskliseis (id_diplomatikis, id_didaskonta, katastasi) VALUES
+((SELECT id FROM diplomatikes WHERE id_foititi = @xenia_x_id), @pappa_id, 'ekremis'),
+((SELECT id FROM diplomatikes WHERE id_foititi = @xenia_x_id), @konstantinou_id, 'ekremis');
+
+-- d14: Partial Accept (1 Accepted, 1 Pending)
+INSERT INTO proskliseis (id_diplomatikis, id_didaskonta, katastasi) VALUES
+((SELECT id FROM diplomatikes WHERE id_foititi = @odysseas_o_id), @dimitriadis_id, 'apodexti'),
+((SELECT id FROM diplomatikes WHERE id_foititi = @odysseas_o_id), @petridou_id, 'ekremis');
+
+-- d15: Rejected (1 Accepted, 1 Rejected)
+INSERT INTO proskliseis (id_diplomatikis, id_didaskonta, katastasi) VALUES
+((SELECT id FROM diplomatikes WHERE id_foititi = @petros_p_id), @lappas_id, 'apodexti'),
+((SELECT id FROM diplomatikes WHERE id_foititi = @petros_p_id), @michalopoulos_id, 'aporrifthi');
+
+
+-- ==========================================================
+-- 8. ΑΝΑΚΟΙΝΩΣΕΙΣ (Για Ypo Exetasi)
+-- ==========================================================
 INSERT INTO anakoinoseis (id_diplomatikis, titlos, imerominia_parousiasis, ora_parousiasis, tropo_parousiasis, topothesia) VALUES
 ((SELECT id FROM diplomatikes WHERE id_foititi = @aikaterini_z_id), 'Παρουσίαση Διπλωματικής: Εικονική Πραγματικότητα', '2025-08-10', '10:00:00', 'di_zosis', 'Αίθουσα Α201'),
 ((SELECT id FROM diplomatikes WHERE id_foititi = @dimitris_th_id), 'Παρουσίαση Διπλωματικής: NLP σε Ελληνικά', '2025-08-12', '11:30:00', 'online', 'https://meet.google.com/xyzabc'),
 ((SELECT id FROM diplomatikes WHERE id_foititi = @ioanna_i_id), 'Παρουσίαση Διπλωματικής: Blockchain Technologies', '2025-08-15', '09:00:00', 'di_zosis', 'Αίθουσα Α202');
 
 
--- 9. Εισαγωγή Δεδομένων στον πίνακα kritiki_aksiologisis (για περατωμένες διπλωματικές)
-INSERT INTO kritiki_aksiologisis (id_trimelous, analytiki_kritiki, analytiki_vathmologia) VALUES
-((SELECT id FROM trimeloys WHERE id_diplomatikis = (SELECT id FROM diplomatikes WHERE id_foititi = @konstantinos_k_id) AND id_melous = @vlachos_id), 'Εξαιρετική υλοποίηση και καλή κατανόηση', 8.5),
-((SELECT id FROM trimeloys WHERE id_diplomatikis = (SELECT id FROM diplomatikes WHERE id_foititi = @konstantinos_k_id) AND id_melous = @papadakis_id), 'Σαφής παρουσίαση, με μικρές αδυναμίες στη βιβλιογραφία', 8.0),
-((SELECT id FROM trimeloys WHERE id_diplomatikis = (SELECT id FROM diplomatikes WHERE id_foititi = @konstantinos_k_id) AND id_melous = @stavropoulou_id), 'Πολύ καλή έρευνα, άριστη απόδοση', 9.0);
-
--- 10. Εισαγωγή Δεδομένων στον πίνακα simioseis
+-- ==========================================================
+-- 9. ΣΗΜΕΙΩΣΕΙΣ & ΑΡΧΕΙΑ
+-- ==========================================================
 INSERT INTO simioseis (id_diplomatikis, id_didaskonta, keimeno) VALUES
-((SELECT id FROM diplomatikes WHERE id_foititi = @alexandros_p_id), @papadakis_id, 'Καλή πρόοδος στο React Native project.'),
-((SELECT id FROM diplomatikes WHERE id_foititi = @eleni_v_id), @stavropoulou_id, 'Χρειάζεται περισσότερη βιβλιογραφία.'),
-((SELECT id FROM diplomatikes WHERE id_foititi = @nikolaos_g_id), @lappas_id, 'Να ενισχυθεί το κεφάλαιο ασφάλειας.'),
-((SELECT id FROM diplomatikes WHERE id_foititi = @maria_d_id), @kyriakidou_id, 'Πολύ καλή δουλειά μέχρι τώρα.'),
-((SELECT id FROM diplomatikes WHERE id_foititi = @georgios_e_id), @michalopoulos_id, 'Σαφήνεια στον κώδικα REST API.');
+((SELECT id FROM diplomatikes WHERE id_foititi = @alexandros_p_id), @papadakis_id, 'Καλή αρχή, περιμένω το πρώτο draft.'),
+((SELECT id FROM diplomatikes WHERE id_foititi = @dimitris_th_id), @dimitriadis_id, 'Προσοχή στη βιβλιογραφία του NLP.');
 
--- 11. Εισαγωγή Δεδομένων στον πίνακα arxeia
 INSERT INTO arxeia (id_diplomatikis, typos, onoma_arxeiou, link) VALUES
-((SELECT id FROM diplomatikes WHERE id_foititi = @alexandros_p_id), 'keimeno', 'react_native_doc.pdf', NULL),
-((SELECT id FROM diplomatikes WHERE id_foititi = @eleni_v_id), 'ypostiriktiko', 'medical_ml_dataset.zip', NULL),
-((SELECT id FROM diplomatikes WHERE id_foititi = @nikolaos_g_id), 'keimeno', 'network_security.pdf', NULL),
-((SELECT id FROM diplomatikes WHERE id_foititi = @maria_d_id), 'link', NULL, 'http://github.com/maria_d/bigdata'),
-((SELECT id FROM diplomatikes WHERE id_foititi = @georgios_e_id), 'keimeno', 'rest_api_doc.pdf', NULL);
-
--- 12. Εισαγωγή Δεδομένων στον πίνακα proskliseis
-INSERT INTO proskliseis (id_diplomatikis, id_didaskonta, katastasi, hmerominia_apantisis) VALUES
-((SELECT id FROM diplomatikes WHERE id_foititi = @alexandros_p_id), @stavropoulou_id, 'apodexti', '2024-11-18'),
-((SELECT id FROM diplomatikes WHERE id_foititi = @eleni_v_id), @kyriakidou_id, 'apodexti', '2024-11-25'),
-((SELECT id FROM diplomatikes WHERE id_foititi = @nikolaos_g_id), @dimitriadis_id, 'aporrifthi', '2024-11-30'),
-((SELECT id FROM diplomatikes WHERE id_foititi = @maria_d_id), @petridou_id, 'ekremis', NULL),
-((SELECT id FROM diplomatikes WHERE id_foititi = @georgios_e_id), @vlachos_id, 'apodexti', '2024-12-10');
-
--- 13. Εισαγωγή Δεδομένων στον πίνακα diplomatiki_logs
-INSERT INTO diplomatiki_logs (id_diplomatikis, palia_katastasi, nea_katastasi, hmerominia_allagis) VALUES
-((SELECT id FROM diplomatikes WHERE id_foititi = @alexandros_p_id), 'ypo_anathesi', 'energi', '2024-11-15 10:00:00'),
-((SELECT id FROM diplomatikes WHERE id_foititi = @eleni_v_id), 'ypo_anathesi', 'energi', '2024-11-20 11:00:00'),
-((SELECT id FROM diplomatikes WHERE id_foititi = @nikolaos_g_id), 'ypo_anathesi', 'energi', '2024-11-25 09:30:00'),
-((SELECT id FROM diplomatikes WHERE id_foititi = @maria_d_id), 'ypo_anathesi', 'energi', '2024-12-01 14:00:00'),
-((SELECT id FROM diplomatikes WHERE id_foititi = @georgios_e_id), 'ypo_anathesi', 'energi', '2024-12-05 16:30:00');
+((SELECT id FROM diplomatikes WHERE id_foititi = @alexandros_p_id), 'keimeno', 'draft_v1.pdf', NULL),
+((SELECT id FROM diplomatikes WHERE id_foititi = @dimitris_th_id), 'link', NULL, 'https://github.com/dimitris/nlp-repo');

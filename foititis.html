@@ -167,7 +167,7 @@
             ${d.perigrafi_arxeio 
                 ? `<div style="text-align:center; margin-bottom:15px;">
                      <a href="/uploads/${d.perigrafi_arxeio}" target="_blank" class="button alt" style="font-size: 0.9em; display:inline-block;">
-                       📄 Προβολή Αρχείου Περιγραφής (PDF)
+                      Προβολή Αρχείου Περιγραφής (PDF)
                      </a>
                    </div>` 
                 : `<p class="muted" style="text-align:center;">Δεν υπάρχει συνημμένο αρχείο περιγραφής.</p>`
@@ -224,7 +224,7 @@
                       <label style="display:block; margin-bottom:5px; font-weight:bold;">Αναζήτηση Καθηγητή</label>
                       <div style="display:flex; gap:10px;">
                           <input type="text" id="anazitisiDidaskon" placeholder="Πληκτρολογήστε όνομα ή επώνυμο..." autocomplete="off" style="flex:1;" />
-                          <button id="btnProsklisi" disabled style="opacity: 0.5; cursor: not-allowed;">➕ Αποστολή</button>
+                          <button id="btnProsklisi" disabled style="opacity: 0.5; cursor: not-allowed;">Αποστολή</button>
                       </div>
                       
                       <input type="hidden" id="selectedDidaskonId" />
@@ -374,21 +374,23 @@
               html += `</div>`;
               content.innerHTML = html;
               
-              // listener gia nimertis link
-              const btnNim = document.getElementById('btnSaveNimertis');
-              if(btnNim) {
-                  btnNim.onclick = async () => {
-                      const link = document.getElementById('nimertisLinkInput').value;
-                      try {
-                          await apiFetch(`${API_BASE}/foititis/nimertis`, {
-                              method: 'POST', headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ id_diplomatikis: d.id, nimertis_link: link })
-                          });
-                          showToast('Αποθηκεύτηκε.', 'success');
-                      } catch (err) { showToast(err.message, 'error'); }
-                  };
-              }
-
+        // listener gia nimertis link
+        const btnNim = document.getElementById('btnSaveNimertis');
+        if(btnNim) {
+            btnNim.onclick = async () => {
+                const link = document.getElementById('nimertisLinkInput').value;
+                try {
+                    // FIX: Changed url from /foititis/nimertis to /diplomatiki/nimertis
+                    await apiFetch(`${API_BASE}/diplomatiki/nimertis`, {
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id_diplomatikis: d.id, nimertis_link: link })
+                    });
+                    showToast('Αποθηκεύτηκε.', 'success');
+                } catch (err) { showToast(err.message, 'error'); }
+            };
+        }
+        
             } else {
               content.innerHTML = `<div class="card"><h2>Κατάσταση: ${d.katastasi}</h2></div>`;
             }

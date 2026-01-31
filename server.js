@@ -445,16 +445,16 @@ app.post(`${API_BASE}/diplomatiki/vathmologia`, (req, res) => {
                     const sum = grades.reduce((a, b) => a + parseFloat(b), 0);
                     const avg = (sum / 3).toFixed(2); 
 
-                    // telikos bathmos kai allagi katastasis se peratomeni
-                    const qFinal = `UPDATE diplomatikes SET final_bathmos = ?, katastasi = 'peratomeni' WHERE id = ?`;
+                    // apothikeysh telikou bathmou
+                    const qFinal = `UPDATE diplomatikes SET final_bathmos = ? WHERE id = ?`;
                     
                     connection.query(qFinal, [avg, id_diplomatikis], (err3) => {
                         if (err3) console.error("Error updating final grade:", err3);
                         
                         return res.json({ 
                             success: true, 
-                            message: `Ο βαθμός καταχωρήθηκε. Η τελική βαθμολογία (${avg}) υπολογίστηκε!`,
-                            diplomatiki_peratomeni: true // shmaia gia allagh sto frontend
+                            message: `Ο βαθμός καταχωρήθηκε. Ο τελικός βαθμός (${avg}) υπολογίστηκε και αναμένει έγκριση Γραμματείας.`,
+                            diplomatiki_peratomeni: false // 2. Tell frontend NOT to switch view yet
                         });
                     });
                 } else {
@@ -470,7 +470,6 @@ app.post(`${API_BASE}/diplomatiki/vathmologia`, (req, res) => {
         });
     });
 });
-
 
 /* allagh katastasis se ypo_exetasi */
 app.post(`${API_BASE}/didaskon/set_ypo_exetasi`, (req, res) => {

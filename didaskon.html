@@ -541,19 +541,19 @@
                     
                     <div style="margin-top: 15px; display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
                         <div>
-                            <p style="margin:5px 0;"><strong>👨‍🎓 Φοιτητής:</strong> ${d.foititis_onoma} ${d.foititis_epitheto}</p>
+                            <p style="margin:5px 0;"><strong>Φοιτητής:</strong> ${d.foititis_onoma} ${d.foititis_epitheto}</p>
                             <p class="muted" style="margin:0 0 5px 0;">${d.foititis_email}</p>
-                            <p style="margin:5px 0;"><strong>👥 Επιτροπή:</strong> ${d.trimelis_epitropi || 'Δεν ορίστηκε ακόμη'}</p>
+                            <p style="margin:5px 0;"><strong>Επιτροπή:</strong> ${d.trimelis_epitropi || 'Δεν ορίστηκε ακόμη'}</p>
                         </div>
                         <div>
-                            <p style="margin:5px 0;"><strong>📅 Ημ. Ανάθεσης:</strong> ${dateStr}</p>
-                            <p style="margin:5px 0;"><strong>⏱️ Χρόνος Υλοποίησης:</strong> ${elapsed}</p>
+                            <p style="margin:5px 0;"><strong>Ημ. Ανάθεσης:</strong> ${dateStr}</p>
+                            <p style="margin:5px 0;"><strong>Χρόνος από Ανάθεση:</strong> ${elapsed}</p>
                         </div>
                     </div>
 
                     ${d.katastasi === 'ypo_exetasi' ? `
                         <div id="grades-container-${d.id}" style="background:#fefce8; padding:15px; margin-top:15px; border-radius:8px; border:1px solid #fde047;">
-                            <p>⏳ Φόρτωση βαθμολογιών...</p>
+                            <p>Φόρτωση βαθμολογιών...</p>
                         </div>
                     ` : ''}
 
@@ -567,8 +567,8 @@
                                         <strong>Τελικός Βαθμός:</strong> ${d.final_bathmos || '-'}
                                     </p>
                                     <div style="margin-top:10px; display:flex; gap:10px;">
-                                         ${d.praktiko_link ? `<a href="${d.praktiko_link}" target="_blank" class="button small">📄 Πρακτικό</a>` : ''}
-                                         ${d.nimertis_link ? `<a href="${d.nimertis_link}" target="_blank" class="button small alt">🔗 Νημερτής</a>` : ''}
+                                         ${d.praktiko_link ? `<a href="${d.praktiko_link}" target="_blank" class="button small">Πρακτικό</a>` : ''}
+                                         ${d.nimertis_link ? `<a href="${d.nimertis_link}" target="_blank" class="button small alt">Νημερτής</a>` : ''}
                                     </div>
                                 </div>
                             ` : ''}
