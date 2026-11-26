@@ -1,0 +1,17 @@
+[
+  {
+    "onoma": "Γιώργος",
+    "epitheto": "Παπαδόπουλος",
+    "email": "gpap@example.com",
+    "password": "password123",
+    "rolos": "foititis",
+    "am": "12345"
+  },
+  {
+    "onoma": "Μαρία",
+    "epitheto": "Ιωάννου",
+    "email": "mioan@example.com",
+    "password": "password123",
+    "rolos": "didaskon"
+  }
+]

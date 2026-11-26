@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Πίνακας Ελέγχου - Γραμματεία</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="body.rolos">
+
+  <header>
+    <h1>Καλώς ήρθατε!</h1>
+  </header>
+
+    <section>
+    <h2>Καταχώρηση Χρηστών</h2>
+    <div class="upload-container">
+      <p>Επιλέξτε ένα αρχείο .json με τη λίστα χρηστών:</p>
+      <input type="file" id="user_json_file" accept=".json" />
+      <button id="btn_upload_json">Μεταφόρτωση και Καταχώρηση</button>
+    </div>
+    <div id="upload_status"></div>
+    </section>
+
+    <section>
+    <h2>Όλες οι Διπλωματικές</h2>
+    <div id="lista_diplwmatikwn"></div>
+  </section>
+
+    <section>
+      <h2>Καταχώρηση Α.Π. Έγκρισης Θέματος</h2>
+      <form id="form_egkrisi_ap" class="vertical-form">
+        
+        <div class="form-group">
+          <label for="id_diplomatikis_egkrisi">ID Διπλωματικής</label>
+          <input type="number" id="id_diplomatikis_egkrisi" placeholder="π.χ. 101" required />
+        </div>
+
+        <div class="form-group">
+          <label for="ap_egkrisis">Αριθμός Πρωτοκόλλου Έγκρισης</label>
+          <input type="text" id="ap_egkrisis" placeholder="Εισάγετε τον Α.Π." required />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-p">Καταχώρηση</button>
+        </div>
+      </form>
+    </section>
+
+    <section>
+    <h2>Ακύρωση Ανάθεσης Θέματος</h2>
+    <form id="form_akyrosi" class="vertical-form">
+
+      <div class="form-group">
+          <label for="id_diplomatikis_akyrosi">ID Διπλωματικής</label>
+          <input type="number" id="id_diplomatikis_akyrosi" placeholder="π.χ. 101" required />
+        </div>   
+
+      <div class="form-group">
+          <label for="gs_number">Αριθμός Γ.Σ.</label>
+          <input type="text" id="gs_number" placeholder="Εισάγετε τον αριθμό Γ.Σ." required />
+        </div>
+
+      <div class="form-group">
+          <label for="gs_year">Έτος Γ.Σ.</label>
+          <input type="number" id="gs_year" placeholder="Εισάγετε το έτος Γ.Σ." required />
+        </div>
+
+      <div class="form-group">
+          <label for="logos_akyrosis">Λόγος Ακύρωσης</label>
+          <textarea id="logos_akyrosis" placeholder="Εισάγετε τον λόγο ακύρωσης" required></textarea>
+        </div>
+        
+      <div class="form-actions">
+          <button type="submit" class="btn">Ακύρωση</button>
+        </div>
+    </form>
+  </section>
+
+  <section>
+  <h2>Περάτωση Διπλωματικής Εργασίας</h2>
+  <form id="form_peratosi" class="vertical-form">
+    
+    <div class="form-group">
+      <label for="id_diplomatikis_peratosi">ID Διπλωματικής</label>
+      <input type="number" id="id_diplomatikis_peratosi" placeholder="π.χ. 101" required />
+      <small class="muted">Η διπλωματική πρέπει να είναι "Υπό Εξέταση" και να έχουν καταχωρηθεί βαθμός και σύνδεσμος Νημερτής.</small>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-p">Περάτωση</button>
+    </div>
+  </form>
+</section>
+
+  <script>
+  
+    // eidopoiiseis
+    function showToast(message, type = 'success') {
+        // 1. Create container if it doesn't exist
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        // eikonidia
+        const icon = type === 'success' ? '✅' : '⚠️';
+        
+        toast.innerHTML = `
+            <span class="toast-icon">${icon}</span>
+            <span>${message}</span>
+        `;
+
+        container.appendChild(toast);
+
+        // 5 deuterolepta diarkeia
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.5s forwards';
+            setTimeout(() => toast.remove(), 500);
+        }, 5000);
+    }
+
+    // Boithitiki synartisi gia fetching me error handling
+    async function apiFetch(url, opts = {}) {
+      const res = await fetch(url, opts);
+      const data = await res.json().catch(()=> ({}));
+      if (!res.ok) throw new Error(data.error || 'Σφάλμα αιτήματος.');
+      return data;
+    }
+
+    function logout() { localStorage.clear(); window.location.href = "index.html"; }
+
+    // Boithitiki synartisi gia metafrasi katastasis
+    function translateStatus(status) {
+    const statusMap = {
+        'energi': 'Ενεργή',
+        'ypo_exetasi': 'Υπό Εξέταση',
+        'ypo_anathesi': 'Υπό Ανάθεση', // Added for completeness
+        'olokliromeni': 'Ολοκληρωμένη'
+    };
+    return statusMap[status] || status;
+    }
+
+    // Boithitiki synartisi gia ypologismo xronou pou exei perasei
+    function getTimeElapsed(dateString) {
+      if (!dateString) return "—";
+      const start = new Date(dateString);
+      const now = new Date();
+      
+      const diffTime = Math.abs(now - start);
+      const totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (totalDays < 1) return "Σήμερα";
+      if (totalDays === 1) return "Εχθές";
+      if (totalDays < 30) return `${totalDays} ημέρες`;
+      
+      if (totalDays < 365) {
+          const months = Math.floor(totalDays / 30);
+          return months === 1 ? "1 μήνας" : `${months} μήνες`;
+      } 
+      
+      const years = Math.floor(totalDays / 365);
+      const remainingDays = totalDays % 365;
+      const extraMonths = Math.floor(remainingDays / 30);
+
+      let output = years === 1 ? "1 χρόνος" : `${years} χρόνια`;
+      
+      if (extraMonths > 0) {
+          output += extraMonths === 1 ? " και 1 μήνας" : ` και ${extraMonths} μήνες`;
+      }
+      
+      return output;
+    }
+
+    // Fortwsi twn diplwmatikwn
+    function toggleDetails(id) {
+      const detailsDiv = document.getElementById(`details-${id}`);
+      if (detailsDiv.style.display === "none") {
+        detailsDiv.style.display = "block";
+      } else {
+        detailsDiv.style.display = "none";
+      }
+    }
+
+    async function fortwseDiplwmatikes() {
+      try {
+        const data = await apiFetch('/api/grammateia/diplwmatikes');
+        const container = document.getElementById("lista_diplwmatikwn");
+        container.innerHTML = "";
+
+        if (data.length === 0) {
+          container.innerHTML = "<p>Δεν βρέθηκαν διπλωματικές.</p>";
+          return;
+        }
+
+        data.forEach(d => {
+          const item = document.createElement("div");
+          item.className = "list-item clickable-diplomatiki";
+          
+          // We calculate elapsed time and translation here
+          const elapsed = getTimeElapsed(d.hmerominia_anathesis);
+          const greekStatus = translateStatus(d.katastasi);
+
+          item.innerHTML = `
+            <div class="diplomatiki-header" onclick="toggleDetails(${d.diplomatiki_id})">
+              <div class="header-main">
+                <strong>#${d.diplomatiki_id}</strong>
+                <span class="diplomatiki-title">${d.titlos}</span>
+              </div>
+              <span class="status-pill status-${d.katastasi}">${greekStatus}</span>
+            </div>
+            
+            <div id="details-${d.diplomatiki_id}" class="diplomatiki-details" style="display: none;">
+              <div class="details-content">
+                <p><strong>Περιγραφή:</strong> ${d.perigrafi || 'Χωρίς περιγραφή'}</p>
+                <p><strong>Τριμελής Επιτροπή:</strong> ${d.trimelis_epitropi || 'Εκκρεμεί'}</p>
+                <p><strong>Χρόνος από την Ανάθεση:</strong> ${elapsed}</p>
+              </div>
+            </div>
+          `;
+          container.appendChild(item);
+        });
+      } catch (err) {
+        console.error("Σφάλμα:", err.message);
+      }
+    }
+    
+    // Kataxorisi neoy xristi
+    document.getElementById("btn_upload_json").addEventListener("click", async () => {
+      const fileInput = document.getElementById("user_json_file");
+      const statusDiv = document.getElementById("upload_status");
+      
+      if (fileInput.files.length === 0) {
+        showToast("Παρακαλώ επιλέξτε ένα αρχείο JSON πρώτα.", 'error');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = async (e) => {
+        try {
+          const usersArray = JSON.parse(e.target.result);
+          
+          if (!Array.isArray(usersArray)) {
+            throw new Error("Το αρχείο πρέπει να περιέχει έναν πίνακα (Array) χρηστών.");
+          }
+
+          const response = await fetch('/api/grammateia/users/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ users: usersArray })
+          });
+
+          const result = await response.json();
+          
+          if (response.ok) {
+            showToast(`Επιτυχία! Εισήχθησαν ${result.count} χρήστες.`, 'success');
+            fortwseDiplwmatikes(); // Refresh the list if needed
+          } else {
+            showToast(`Σφάλμα: ${result.error}`, 'error');
+          }
+        } catch (err) {
+          showToast("Σφάλμα κατά την ανάγνωση του αρχείου: " + err.message, 'error');
+        }
+      };
+
+  reader.readAsText(file);
+});
+
+    // kataxorisi arithmou protokollou egkrisis 
+    document.getElementById("form_egkrisi_ap").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    const payload = {
+      id_diplomatikis: Number(document.getElementById("id_diplomatikis_egkrisi").value),
+      arithmos_ap: document.getElementById("ap_egkrisis").value
+    };
+    
+    try {
+      const response = await fetch('/api/grammateia/kataxorisi_ap_egkrisis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+          throw new Error(result.error || "Αποτυχία καταχώρησης");
+      }
+
+      showToast("Ο Αριθμός Πρωτοκόλλου καταχωρήθηκε επιτυχώς.", 'success');
+      fortwseDiplwmatikes();
+      e.target.reset();
+    } catch (err) {
+      showToast(`Σφάλμα: ${err.message}`, 'error');
+    }
+  });
+
+    // Akirosi diplwmatikis
+    document.getElementById("form_akyrosi").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = {
+        id_diplomatikis: Number(document.getElementById("id_diplomatikis_akyrosi").value),
+        logos: document.getElementById("logos_akyrosis").value,
+        arithmos_gs: document.getElementById("gs_number").value,
+        etos_gs: Number(document.getElementById("gs_year").value)
+      };
+      
+      try {
+        await apiFetch('/api/grammateia/akyrosi_diplwmatikis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        showToast("Η διπλωματική ακυρώθηκε επιτυχώς.", 'success');
+        fortwseDiplwmatikes();
+        e.target.reset();
+      } catch (err) {
+        showToast(`Σφάλμα: ${err.message}`, 'error');
+      }
+    });
+
+    // Peratosi diplwmatikis 
+    document.getElementById("form_peratosi").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    const id_diplomatikis = Number(document.getElementById("id_diplomatikis_peratosi").value);
+    
+    try {
+      const response = await fetch('/api/grammateia/peratosi_diplomatikis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_diplomatikis })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+          throw new Error(result.error || "Αποτυχία περάτωσης");
+      }
+
+      showToast("Η διπλωματική ολοκληρώθηκε (Περατώθηκε) επιτυχώς!", 'success');
+      fortwseDiplwmatikes(); // Ανανέωση της λίστας
+      e.target.reset();
+    } catch (err) {
+      showToast(`Σφάλμα: ${err.message}`, 'error');
+    }
+  });
+
+    fortwseDiplwmatikes();
+  </script>
+</body>
+</html>

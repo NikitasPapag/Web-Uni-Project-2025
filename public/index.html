@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web Project</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div id="header-container"></div>
+
+  <div id="main-content"></div>
+
+<section>
+  <h2>Ανακοινώσεις Παρουσιάσεων Διπλωματικών</h2>
+<div class="filter-container">
+    <div class="form-group">
+      <label for="startDate">Ημερομηνία Έναρξης</label>
+      <input type="date" id="startDate" />
+    </div>
+
+    <div class="form-group">
+      <label for="endDate">Ημερομηνία Λήξης</label>
+      <input type="date" id="endDate" />
+    </div>
+    
+    <button onclick="fetchAndDisplayAnakoinoseis()">Αναζήτηση</button>
+    <button onclick="hideAnakoinoseis()">Απόκρυψη</button>
+  </div>
+  <div class="row button-group">
+    <button onclick="fetchAnakoinoseis('json')">Εξαγωγή σε JSON</button>
+    <button onclick="fetchAnakoinoseis('xml')">Εξαγωγή σε XML</button>
+  </div>
+  <div id="anakoinoseis-list" style="margin-top: 20px;"></div>
+</section>
+
+<script>
+
+async function apiFetch(url, options = {}) {
+  const res = await fetch(url, options);
+  let data = null;
+  try { data = await res.json(); } catch {}
+  
+  if (!res.ok) {
+    const msg = data && data.error ? data.error : 'Σφάλμα αιτήματος.';
+    throw new Error(msg);
+  }
+  return data;
+}
+
+   //Arxiko setup
+    fetch('header.html')
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('header-container').innerHTML = html;
+        setupHeaderEvents();
+        updateHeaderButtons();
+        loadArxiki();
+      });
+
+    function setupHeaderEvents() {
+      // Listener gia ta koumpia tou header
+      document.addEventListener('click', (e) => {
+        if (e.target.id === 'arxiki-btn') {
+          loadArxiki();
+        }
+        if (e.target.id === 'eisodos-btn') {
+          loadLoginForm();
+        }
+        if (e.target.id === 'aposyndesi-btn') {
+          localStorage.clear(); // Svisimo twn dedomenwn ths sundeshs
+          loadArxiki();
+        }
+        if (e.target.id === 'user-button') {
+          const rolos = localStorage.getItem('rolos');
+          const username = localStorage.getItem('username');
+          if (rolos) {
+            loadSelidaXristi(rolos, username);
+          }
+        }
+      });
+      
+      // Listener gia thn ypovoli tou login form 
+      document.addEventListener('submit', async (e) => {
+        // To ID tou login form einai loginForm
+        if (e.target.id === 'loginForm') {
+          e.preventDefault();
+          const usernameInput = e.target.querySelector('#username').value.trim().toLowerCase();
+          const passwordInput = e.target.querySelector('#password').value;
+          const errorMsg = document.getElementById('errorMsg');
+          
+          try {
+            const res = await fetch('http://localhost:3000/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username: usernameInput, password: passwordInput })
+            });
+    
+            const data = await res.json();
+            if (res.ok) {
+              // Apothikeusi dedomenwn sundeshs sto localStorage
+              localStorage.setItem('id', data.id);
+              localStorage.setItem('username', data.username);
+              localStorage.setItem('rolos', data.rolos);
+              
+              await loadSelidaXristi(data.rolos, data.username);
+            } else {
+              errorMsg.textContent = data.error || 'Αποτυχία σύνδεσης.';
+            }
+          } catch (err) {
+            errorMsg.textContent = 'Σφάλμα σύνδεσης. Ελέγξτε τον server.';
+          }
+        }
+      });
+    }
+
+function updateHeaderButtons() {
+  const username = localStorage.getItem('username');
+
+  const eisodosBtn = document.getElementById('eisodos-btn');
+  const aposyndesiBtn = document.getElementById('aposyndesi-btn');
+  const userBtn = document.getElementById('user-button');
+
+  if (username) {
+    eisodosBtn.style.display = 'none';
+    aposyndesiBtn.style.display = 'inline-block';
+    userBtn.style.display = 'inline-block';
+
+    // Orismos onomatos xristi sto koumpi
+    userBtn.textContent = username;
+  } else {
+    eisodosBtn.style.display = 'inline-block';
+    aposyndesiBtn.style.display = 'none';
+    userBtn.style.display = 'none';
+  }
+}
+    function loadArxiki() {
+      document.getElementById('main-content').innerHTML = `
+        <div class="welcome-message centered">
+          <h1>Καλωσήρθατε στην Πλατφόρμα</h1>
+          <p>Χρησιμοποιήστε την πλοήγηση στο επάνω μέρος για να συνδεθείτε ή να περιηγηθείτε.</p>
+        </div>
+      `;
+      updateHeaderButtons();
+    }
+
+    function loadLoginForm() {
+      document.getElementById('main-content').innerHTML = `
+        <form id="loginForm" class="login-form">
+          <h2>Είσοδος</h2>
+          
+          <input type="text" id="username" name="username" autocomplete="username" placeholder="Εισάγετε το username σας" required />
+          
+          <input type="password" id="password" name="password" autocomplete="current-password" placeholder="Εισάγετε τον κωδικό σας" required />
+          
+          <button type="submit">Είσοδος</button>          
+          <p id="errorMsg" class="error-msg"></p>
+        </form>
+      `;
+
+      updateHeaderButtons();
+    }
+    
+    async function loadSelidaXristi(rolos, username) {
+  try {
+    const response = await fetch(`${rolos}.html`);
+    if (!response.ok) {
+      throw new Error(`Failed to load ${rolos}.html`);
+    }
+    const html = await response.text();
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = html;
+
+    // Ektelesi tou script apo to HTML pou fortwthke
+    const scriptElement = mainContent.querySelector('script');
+    if (scriptElement) {
+        const newScript = document.createElement('script');
+        newScript.textContent = scriptElement.textContent;
+        document.body.appendChild(newScript);
+    }
+
+    // Klhsh synarthshs arxikopoihshs analoga ton rolo tou xristi
+    if (rolos === 'foititis') {
+        if (typeof initFoititisPage === 'function') {
+            initFoititisPage(username);
+        }
+    } else if (rolos === 'didaskon') {
+        if (typeof initDidaskonPage === 'function') {
+            initDidaskonPage(username);
+        }
+    }
+    updateHeaderButtons();
+  } catch (e) {
+    document.getElementById('main-content').innerHTML = `<p>Error loading ${rolos} page: ${e.message}</p>`;
+    console.error(e);
+  }
+}
+
+// synartiseis gia dimosies anakoinoseis
+async function fetchAndDisplayAnakoinoseis() {
+  const outputDiv = document.getElementById('anakoinoseis-list');
+  
+  // FIX: Removed the check for !rawOutputDiv since it no longer exists
+  if (!outputDiv) return;
+
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+
+  const params = new URLSearchParams({ format: 'json' });
+  if (startDate) params.append('start_date', startDate);
+  if (endDate) params.append('end_date', endDate);
+
+  try {
+    const anakoinoseis = await apiFetch(`/api/public/anakoinoseis?${params.toString()}`);
+
+    if (anakoinoseis.length === 0) {
+      outputDiv.innerHTML = '<p class="muted" style="margin-top:10px;">Δεν βρέθηκαν ανακοινώσεις.</p>';
+      return;
+    }
+
+    outputDiv.innerHTML = '<h3 style="margin-top: 20px;">Ανακοινώσεις:</h3>' + anakoinoseis.map(item => {
+      const dateObj = new Date(item.imerominia_parousiasis);
+      const dateStr = dateObj.toLocaleDateString('el-GR');
+      const timeStr = item.ora_parousiasis ? item.ora_parousiasis.substring(0, 5) : '—';
+      const mode = item.tropo_parousiasis === 'di_zosis' ? 'Δια ζώσης' : 'Online';
+
+      return `
+        <div class="list-item clickable-diplomatiki" style="cursor: default; margin-bottom: 10px;">
+          
+          <div class="diplomatiki-header" style="cursor: default; padding-bottom: 5px;">
+            <div class="header-main">
+              <span class="diplomatiki-title" style="font-weight: bold; font-size: 1.1rem;">${item.titlos}</span>
+            </div>
+            <span class="status-pill" style="background-color: var(--light-blue); color: var(--p);">
+              ${dateStr}
+            </span>
+          </div>
+
+          <div style="padding: 0 15px 15px 15px; text-align: left; color: #555; font-size: 0.95rem;">
+            <p style="margin: 5px 0;"><strong>Ώρα:</strong> ${timeStr} &nbsp;|&nbsp; <strong>Τρόπος:</strong> ${mode}</p>
+            <p style="margin: 5px 0;"><strong>Τοποθεσία:</strong> ${item.topothesia || '-'}</p>
+          </div>
+
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    outputDiv.innerHTML = `<p class="error">Σφάλμα: ${error.message}</p>`;
+  }
+}
+
+// Function for downloading Announcements (JSON or XML)
+async function fetchAnakoinoseis(format) {
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+  
+  let url = `/api/public/anakoinoseis?format=${format}`;
+  if (startDate) {
+    url += `&start_date=${startDate}`;
+  }
+  if (endDate) {
+    url += `&end_date=${endDate}`;
+  }
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Σφάλμα δικτύου: ${response.statusText}`);
+    }
+
+    // Get the raw text (JSON or XML)
+    let content = await response.text();
+    let mimeType = 'text/plain';
+
+    // Format if necessary
+    if (format === 'json') {
+        // Parse and re-stringify to make it pretty (indented)
+        content = JSON.stringify(JSON.parse(content), null, 2);
+        mimeType = 'application/json';
+    } else if (format === 'xml') {
+        mimeType = 'application/xml';
+    }
+
+    // Create Download Link
+    const blob = new Blob([content], { type: mimeType });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `anakoinoseis_export.${format}`; // e.g., anakoinoseis_export.json
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+  } catch (error) {
+    console.error(error);
+    alert(`Σφάλμα κατά την εξαγωγή: ${error.message}`);
+  }
+}
+
+// synartisi gia apokripsi ton anakoinoseon
+function hideAnakoinoseis() {
+  document.getElementById('anakoinoseis-list').innerHTML = "";
+  }
+
+</script>
+</body>
+</html>
