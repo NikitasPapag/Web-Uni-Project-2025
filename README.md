@@ -1,4 +1,4 @@
-# Web Uni Project 2025 — University Thesis Management System
+# University Thesis Management System — Web Development Course Project (2025)
 
 A full-stack web application for managing the complete lifecycle of undergraduate theses—from topic proposal and three-member examination committee formation to defense announcements, grading, and final completion. Built with **Node.js**, **Express**, and **MySQL** on the backend, paired with a dynamic **HTML/CSS/JavaScript** frontend.
 
